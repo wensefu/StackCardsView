@@ -1,17 +1,59 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/activity_main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:gravity="center"
+    android:orientation="vertical"
     android:paddingBottom="@dimen/activity_vertical_margin"
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
-    tools:context="com.beyondsw.widget.MainActivity">
 
-    <TextView
-        android:layout_width="wrap_content"
+    >
+
+
+    <com.beyondsw.swipecard.demo.MyViewGroup
+        android:id="@+id/topview"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        app:name="topview">
+
+        <com.beyondsw.swipecard.demo.MyViewGroup
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:name="group1">
+
+            <com.beyondsw.swipecard.demo.MyViewGroup
+                android:id="@+id/mygroup"
+                android:layout_width="match_parent"
+                android:layout_height="600px"
+                android:foreground="@android:color/holo_orange_dark"
+                android:orientation="vertical"
+                app:name="group2">
+
+                <com.beyondsw.swipecard.demo.MyView
+                    android:id="@+id/myview"
+                    android:layout_width="match_parent"
+                    android:layout_height="100px" />
+
+                <com.beyondsw.swipecard.demo.MyView2
+                    android:id="@+id/myview2"
+                    android:layout_width="match_parent"
+                    android:layout_height="20px"
+                    android:layout_marginTop="100dp" />
+            </com.beyondsw.swipecard.demo.MyViewGroup>
+        </com.beyondsw.swipecard.demo.MyViewGroup>
+    </com.beyondsw.swipecard.demo.MyViewGroup>
+
+
+    <Button
+        android:id="@+id/button"
+        android:layout_width="160dp"
         android:layout_height="wrap_content"
-        android:text="Hello World!"/>
-</RelativeLayout>
+        android:layout_marginTop="20dp"
+        android:text="测试"
+        android:textSize="18dp" />
+</LinearLayout>
