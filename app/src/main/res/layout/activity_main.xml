@@ -14,19 +14,19 @@
     >
 
 
-    <com.beyondsw.swipecard.demo.MyViewGroup
+    <com.beyondsw.widget.MyViewGroup
         android:id="@+id/topview"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
         app:name="topview">
 
-        <com.beyondsw.swipecard.demo.MyViewGroup
+        <com.beyondsw.widget.MyViewGroup
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             app:name="group1">
 
-            <com.beyondsw.swipecard.demo.MyViewGroup
+            <com.beyondsw.widget.MyViewGroup
                 android:id="@+id/mygroup"
                 android:layout_width="match_parent"
                 android:layout_height="600px"
@@ -34,19 +34,19 @@
                 android:orientation="vertical"
                 app:name="group2">
 
-                <com.beyondsw.swipecard.demo.MyView
+                <com.beyondsw.widget.MyView
                     android:id="@+id/myview"
                     android:layout_width="match_parent"
                     android:layout_height="100px" />
 
-                <com.beyondsw.swipecard.demo.MyView2
+                <com.beyondsw.widget.MyView2
                     android:id="@+id/myview2"
                     android:layout_width="match_parent"
                     android:layout_height="20px"
                     android:layout_marginTop="100dp" />
-            </com.beyondsw.swipecard.demo.MyViewGroup>
-        </com.beyondsw.swipecard.demo.MyViewGroup>
-    </com.beyondsw.swipecard.demo.MyViewGroup>
+            </com.beyondsw.widget.MyViewGroup>
+        </com.beyondsw.widget.MyViewGroup>
+    </com.beyondsw.widget.MyViewGroup>
 
 
     <Button

@@ -21,12 +21,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         findViewById(R.id.button).setOnClickListener(this);
     }
 
+    int i = 1;
+
     @Override
     public void onClick(View v) {
         if(v==view1){
             Log.d("lingchao", "onClick: ");
         }else{
-            view2.setVisibility(view2.getVisibility() == View.VISIBLE ? View.GONE : View.VISIBLE);
+            Log.d("lingchao", "onClick-before: getTop=" + view1.getTop()+",getty="+view1.getTranslationY());
+            view1.setY(view1.getY()+2);
+            Log.d("lingchao", "onClick-after: getTop=" + view1.getTop()+",getty="+view1.getTranslationY());
+//            Log.d("lingchao", "onClick-before: getTop=" + view1.getTop());
+//            view1.setTranslationY((i++) * 5);
+//            Log.d("lingchao", "onClick-after: getTop=" + view1.getTop());
         }
 
     }

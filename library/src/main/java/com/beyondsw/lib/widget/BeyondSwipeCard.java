@@ -18,6 +18,36 @@ public class BeyondSwipeCard extends ViewGroup {
 
     private static final String TAG = "BeyondSwipeCard";
 
+    /**
+     * 支持左滑
+     */
+    public static final int SWIPE_LEFT = 1;
+
+    /**
+     * 支持右滑
+     */
+    public static final int SWIPE_RIGHT = 2;
+
+    /**
+     * 支持上滑
+     */
+    public static final int SWIPE_TOP = 3;
+
+    /**
+     * 支持下滑
+     */
+    public static final int SWIPE_BOTTOM = 4;
+
+    /**
+     * 禁止滑动
+     */
+    public static final int SWIPE_NONE = 5;
+
+    /**
+     * 允许任意方向滑动
+     */
+    public static final int SWIPE_ALL = 6;
+
     private Adapter mAdapter;
 
     /**
@@ -91,6 +121,20 @@ public class BeyondSwipeCard extends ViewGroup {
     @Override
     public void removeAllViews() {
         throw new UnsupportedOperationException("removeAllViews() is not supported");
+    }
+
+    /**
+     * 设置可以滑动的方向<br/>
+     * @see #SWIPE_ALL
+     * @see #SWIPE_LEFT
+     * @see #SWIPE_RIGHT
+     * @see #SWIPE_TOP
+     * @see #SWIPE_BOTTOM
+     * @see #SWIPE_NONE
+     * @param direction
+     */
+    public void setSwipeDirection(int direction) {
+
     }
 
     public void setSwipeAllowed(boolean allowed) {

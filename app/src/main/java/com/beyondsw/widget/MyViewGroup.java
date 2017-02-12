@@ -5,7 +5,6 @@ import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.util.AttributeSet;
 import android.util.Log;
-import android.view.View;
 import android.widget.LinearLayout;
 
 /**
@@ -40,12 +39,6 @@ public class MyViewGroup extends LinearLayout{
         super.onLayout(changed, l, t, r, b);
         int cnt = getChildCount();
         Log.d("lingchao", "MyViewGroup "+name+" onLayout,childcnt ="+cnt);
-        if (cnt>0) {
-            View first = getChildAt(0);
-            first.setAlpha(0.2f);
-            first.setScaleY(3f);
-            first.offsetTopAndBottom(300);
-        }
     }
 
     @Override
