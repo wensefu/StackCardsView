@@ -19,7 +19,6 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
 
     //1,速度大于一定值时卡片滑出消失
 //    2，滑动距离超过一定值后卡片消失，滑动过程中改变alpha值
-//    3，滑动时卡片倾斜一些角度
 //    4，卡片消失后数据刷新
 //    5，滑动方向控制
 //    6，view缓存
