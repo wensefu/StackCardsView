@@ -82,7 +82,11 @@ public class BeyondSwipeCard extends ViewGroup {
     private float mDismissAlpha = DISMISS_ALPHA;
 
     //滑动时的最大旋转角度
-    private float mMaxRotation;
+    private float mMaxRotation = 6;
+
+    private float[] mScaleArray;
+    private float[] mAlphaArray;
+    private float[] mTranslationYArray;
 
     private boolean mSwipeAllowed = true;
     private ISwipeTouchHelper mTouchHelper;
@@ -154,6 +158,10 @@ public class BeyondSwipeCard extends ViewGroup {
         }
     }
 
+    float getMaxRotation() {
+        return mMaxRotation;
+    }
+
     public boolean isSwipeAllowed() {
         return mSwipeAllowed;
     }
@@ -172,6 +180,12 @@ public class BeyondSwipeCard extends ViewGroup {
         final int centerX = (r - l - getPaddingLeft() - getPaddingRight()) / 2;
         final int centerY = (b - t - getPaddingBottom() - getPaddingTop()) / 2;
         int layerIndex = 0;
+        mScaleArray = new float[cnt];
+        mAlphaArray = new float[cnt];
+        mTranslationYArray = new float[cnt];
+        mScaleArray[0] = 1;
+        mAlphaArray[0] = 1;
+        mTranslationYArray[0] = 0;
         for (int i = 0; i < cnt; i++) {
             View child = getChildAt(i);
             if (child.getVisibility() != View.GONE) {
@@ -181,11 +195,15 @@ public class BeyondSwipeCard extends ViewGroup {
 
                 if (layerIndex > 0) {
                     float scale = 1 - layerIndex * (1 - mScaleFactor);
+                    mScaleArray[i] = scale;
                     child.setScaleX(scale);
                     child.setScaleY(scale);
                     float alpha = 1 - layerIndex * (1 - mAlphaFactor);
+                    mAlphaArray[i] = alpha;
                     child.setAlpha(alpha);
-                    child.setTranslationY(half_childHeight * (1 - scale) + mLayerEdgeHeight * layerIndex);
+                    float translationY = half_childHeight * (1 - scale) + mLayerEdgeHeight * layerIndex;
+                    mTranslationYArray[i] = translationY;
+                    child.setTranslationY(translationY);
                 }
                 if (layerIndex < mMaxVisibleCnt - 1) {
                     layerIndex++;
@@ -197,15 +215,27 @@ public class BeyondSwipeCard extends ViewGroup {
     void onCoverScrolled(float progress) {
         Log.d(TAG, "onCoverScrolled: progress=" + progress);
         final int cnt = getChildCount();
-        int layerIndex = 0;
+        float preScale;
+        float preAlpha;
+        float preTranslationY;
+        float targetScale;
+        float targetAlpha;
+        float targetTranslationY;
+        float progressScale;
         for (int i = 1; i < cnt; i++) {
             View child = getChildAt(i);
             if (child.getVisibility() != View.GONE) {
-                float targetScale =
-                child.setScaleX();
-                child.setScaleY();
-                child.setAlpha();
-                child.setTranslationY();
+                preScale = mScaleArray[i];
+                preAlpha = mAlphaArray[i];
+                preTranslationY = mTranslationYArray[i];
+                targetScale = mScaleArray[i - 1];
+                targetAlpha = mAlphaArray[i - 1];
+                targetTranslationY = mTranslationYArray[i - 1];
+                progressScale = preScale + (targetScale - preScale) * progress;
+                child.setScaleX(progressScale);
+                child.setScaleY(progressScale);
+                child.setAlpha(preAlpha + (targetAlpha - preAlpha) * progress);
+                child.setTranslationY(preTranslationY + (targetTranslationY - preTranslationY) * progress);
             }
         }
     }

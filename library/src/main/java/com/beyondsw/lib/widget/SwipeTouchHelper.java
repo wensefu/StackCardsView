@@ -17,7 +17,7 @@ import com.beyondsw.lib.widget.rebound.SpringSystem;
  */
 public class SwipeTouchHelper implements ISwipeTouchHelper {
 
-//    1, 滑动首卡时底下卡片位置 scale 透明度跟随变化
+    //1,速度大于一定值时卡片滑出消失
 //    2，滑动距离超过一定值后卡片消失，滑动过程中改变alpha值
 //    3，滑动时卡片倾斜一些角度
 //    4，卡片消失后数据刷新
@@ -36,6 +36,8 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
     private float mChildInitY;
     private float mAnimStartX;
     private float mAnimStartY;
+
+    private boolean mShouldDisappear;
 
     private SpringSystem mSpringSystem;
     private Spring mSpring;
@@ -57,7 +59,7 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
             Log.d(TAG, "onSpringUpdate: value=" + value);
             mTouchChild.setX(mAnimStartX - (mAnimStartX - mChildInitX) * value);
             mTouchChild.setY(mAnimStartY - (mAnimStartY - mChildInitY) * value);
-            onCoverMoved();
+            onCoverScrolled();
         }
     };
 
@@ -99,7 +101,7 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
         View cover = mSwipeView.getChildAt(0);
         cover.setX(cover.getX() + dx);
         cover.setY(cover.getY() + dy);
-        onCoverMoved();
+        onCoverScrolled();
         Log.d(TAG, "performDrag: dx=" + dx + "dy=" + dy + "left=" + cover.getLeft());
     }
 
@@ -117,19 +119,36 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
         }
     }
 
-    private void onCoverMoved() {
+    private void animateToDisappear(){
+
+    }
+
+    private void onCoverScrolled() {
         if (mTouchChild == null) {
             return;
         }
         float dx = mTouchChild.getX() - mChildInitX;
         float dy = mTouchChild.getY() - mChildInitY;
+        if (dx == 0) {
+            mTouchChild.setRotation(0);
+        } else {
+            float maxRotation = mSwipeView.getMaxRotation();
+            float rotation = maxRotation * (2 * dx / mTouchChild.getWidth());
+            if (rotation > maxRotation) {
+                rotation = maxRotation;
+            } else if (rotation < -maxRotation) {
+                rotation = -maxRotation;
+            }
+            mTouchChild.setRotation(rotation);
+        }
         double distance = Math.sqrt(dx * dx + dy * dy);
-        Log.d(TAG, "onCoverMoved: dx=" + dx + ",dy=" + dy + ",distance=" + distance);
         int dismiss_distance = mSwipeView.getDismissDistance();
         if (distance >= dismiss_distance) {
             mSwipeView.onCoverScrolled(1);
+            mShouldDisappear = true;
         } else {
             mSwipeView.onCoverScrolled((float) distance / dismiss_distance);
+            mShouldDisappear = false;
         }
     }
 
@@ -214,6 +233,11 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
                 break;
             case MotionEvent.ACTION_UP:
                 Log.d(TAG, "onTouchEvent: ACTION_UP");
+//                if (mShouldDisappear) {
+//
+//                } else {
+//                    animateToInitPos();
+//                }
                 animateToInitPos();
                 mIsBeingDragged = false;
                 break;

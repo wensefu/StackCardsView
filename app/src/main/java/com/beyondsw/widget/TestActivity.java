@@ -86,7 +86,7 @@ public class TestActivity extends AppCompatActivity {
             view.setOnClickListener(this);
             ImageView img = (ImageView) view.findViewById(R.id.img);
             TextView textView = (TextView) view.findViewById(R.id.text);
-            textView.setText(String.valueOf(position));
+            textView.setText("pos=" + position);
             Glide.with(TestActivity.this).load(ImageUrls.images[position])
                     .centerCrop()
                     .placeholder(R.drawable.img_dft)
