@@ -74,7 +74,7 @@ public class BeyondSwipeCard extends ViewGroup {
     private static final float ALPHA_FACTOR = 0.6f;
     private float mAlphaFactor = ALPHA_FACTOR;
 
-    private static final int SWIPE_TO_DISMISS_DISTINCE = 200;
+    private static final int SWIPE_TO_DISMISS_DISTINCE = 500;
     private int mDismissDistance = SWIPE_TO_DISMISS_DISTINCE;
 
     //卡片消失时的透明度
@@ -185,11 +185,27 @@ public class BeyondSwipeCard extends ViewGroup {
                     child.setScaleY(scale);
                     float alpha = 1 - layerIndex * (1 - mAlphaFactor);
                     child.setAlpha(alpha);
-                    child.offsetTopAndBottom(Math.round(half_childHeight * (1 - scale) + mLayerEdgeHeight * layerIndex));
+                    child.setTranslationY(half_childHeight * (1 - scale) + mLayerEdgeHeight * layerIndex);
                 }
                 if (layerIndex < mMaxVisibleCnt - 1) {
                     layerIndex++;
                 }
+            }
+        }
+    }
+
+    void onCoverScrolled(float progress) {
+        Log.d(TAG, "onCoverScrolled: progress=" + progress);
+        final int cnt = getChildCount();
+        int layerIndex = 0;
+        for (int i = 1; i < cnt; i++) {
+            View child = getChildAt(i);
+            if (child.getVisibility() != View.GONE) {
+                float targetScale =
+                child.setScaleX();
+                child.setScaleY();
+                child.setAlpha();
+                child.setTranslationY();
             }
         }
     }

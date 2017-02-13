@@ -57,6 +57,7 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
             Log.d(TAG, "onSpringUpdate: value=" + value);
             mTouchChild.setX(mAnimStartX - (mAnimStartX - mChildInitX) * value);
             mTouchChild.setY(mAnimStartY - (mAnimStartY - mChildInitY) * value);
+            onCoverMoved();
         }
     };
 
@@ -98,6 +99,7 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
         View cover = mSwipeView.getChildAt(0);
         cover.setX(cover.getX() + dx);
         cover.setY(cover.getY() + dy);
+        onCoverMoved();
         Log.d(TAG, "performDrag: dx=" + dx + "dy=" + dy + "left=" + cover.getLeft());
     }
 
@@ -115,10 +117,20 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
         }
     }
 
-    private void onCoverMoved(float x, float y) {
-        float dx = x - mChildInitX;
-        float dy = y - mChildInitY;
-
+    private void onCoverMoved() {
+        if (mTouchChild == null) {
+            return;
+        }
+        float dx = mTouchChild.getX() - mChildInitX;
+        float dy = mTouchChild.getY() - mChildInitY;
+        double distance = Math.sqrt(dx * dx + dy * dy);
+        Log.d(TAG, "onCoverMoved: dx=" + dx + ",dy=" + dy + ",distance=" + distance);
+        int dismiss_distance = mSwipeView.getDismissDistance();
+        if (distance >= dismiss_distance) {
+            mSwipeView.onCoverScrolled(1);
+        } else {
+            mSwipeView.onCoverScrolled((float) distance / dismiss_distance);
+        }
     }
 
     @Override
@@ -195,7 +207,6 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
                     mLastX = x;
                     mLastY = y;
                     performDrag(dx, dy);
-                    onCoverMoved(x, y);
                 }
                 break;
             case MotionEvent.ACTION_POINTER_DOWN:
