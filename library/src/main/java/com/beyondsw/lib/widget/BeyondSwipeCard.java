@@ -19,6 +19,11 @@ public class BeyondSwipeCard extends ViewGroup {
     private static final String TAG = "BeyondSwipeCard";
 
     /**
+     * 禁止滑动
+     */
+    public static final int SWIPE_NONE = 0;
+
+    /**
      * 支持左滑
      */
     public static final int SWIPE_LEFT = 1;
@@ -26,32 +31,27 @@ public class BeyondSwipeCard extends ViewGroup {
     /**
      * 支持右滑
      */
-    public static final int SWIPE_RIGHT = 2;
+    public static final int SWIPE_RIGHT = 1 << 1;
 
     /**
      * 支持上滑
      */
-    public static final int SWIPE_TOP = 3;
+    public static final int SWIPE_TOP = 1 << 2;
 
     /**
      * 支持下滑
      */
-    public static final int SWIPE_BOTTOM = 4;
-
-    /**
-     * 禁止滑动
-     */
-    public static final int SWIPE_NONE = 5;
+    public static final int SWIPE_BOTTOM = 1 << 3;
 
     /**
      * 允许任意方向滑动
      */
-    public static final int SWIPE_ALL = 6;
+    public static final int SWIPE_ALL = SWIPE_LEFT | SWIPE_RIGHT | SWIPE_TOP | SWIPE_BOTTOM;
 
     private Adapter mAdapter;
 
     /**
-     * 静止时最多可以看到的卡片數
+     * 静止时最多可以看到的卡片数
      */
     private int mMaxVisibleCnt = 3;
 
@@ -73,6 +73,16 @@ public class BeyondSwipeCard extends ViewGroup {
 
     private static final float ALPHA_FACTOR = 0.6f;
     private float mAlphaFactor = ALPHA_FACTOR;
+
+    private static final int SWIPE_TO_DISMISS_DISTINCE = 200;
+    private int mDismissDistance = SWIPE_TO_DISMISS_DISTINCE;
+
+    //卡片消失时的透明度
+    private static final float DISMISS_ALPHA = 0.3f;
+    private float mDismissAlpha = DISMISS_ALPHA;
+
+    //滑动时的最大旋转角度
+    private float mMaxRotation;
 
     private boolean mSwipeAllowed = true;
     private ISwipeTouchHelper mTouchHelper;
@@ -125,13 +135,14 @@ public class BeyondSwipeCard extends ViewGroup {
 
     /**
      * 设置可以滑动的方向<br/>
+     *
+     * @param direction
      * @see #SWIPE_ALL
      * @see #SWIPE_LEFT
      * @see #SWIPE_RIGHT
      * @see #SWIPE_TOP
      * @see #SWIPE_BOTTOM
      * @see #SWIPE_NONE
-     * @param direction
      */
     public void setSwipeDirection(int direction) {
 
@@ -145,6 +156,10 @@ public class BeyondSwipeCard extends ViewGroup {
 
     public boolean isSwipeAllowed() {
         return mSwipeAllowed;
+    }
+
+    public int getDismissDistance() {
+        return mDismissDistance;
     }
 
     @Override

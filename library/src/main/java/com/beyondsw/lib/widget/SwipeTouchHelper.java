@@ -17,6 +17,13 @@ import com.beyondsw.lib.widget.rebound.SpringSystem;
  */
 public class SwipeTouchHelper implements ISwipeTouchHelper {
 
+//    1, 滑动首卡时底下卡片位置 scale 透明度跟随变化
+//    2，滑动距离超过一定值后卡片消失，滑动过程中改变alpha值
+//    3，滑动时卡片倾斜一些角度
+//    4，卡片消失后数据刷新
+//    5，滑动方向控制
+//    6，view缓存
+
     private static final String TAG = "SwipeTouchHelper";
 
     private BeyondSwipeCard mSwipeView;
@@ -108,6 +115,12 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
         }
     }
 
+    private void onCoverMoved(float x, float y) {
+        float dx = x - mChildInitX;
+        float dy = y - mChildInitY;
+
+    }
+
     @Override
     public boolean onInterceptTouchEvent(MotionEvent ev) {
         if (!mSwipeView.isSwipeAllowed()) {
@@ -122,15 +135,15 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
         switch (action) {
             case MotionEvent.ACTION_DOWN:
                 Log.d(TAG, "onInterceptTouchEvent: ACTION_DOWN,x=" + ev.getX());
-                requestParentDisallowInterceptTouchEvent(true);
-                if (mSpring != null && !mSpring.isAtRest()) {
-                    mSpring.removeAllListeners();
-                    //mSpring.setAtRest();
-                }
                 if (!isTouchOnFirstChild(x, y)) {
                     Log.d(TAG, "onInterceptTouchEvent: !isTouchOnFirstChild");
                     mIsBeingDragged = false;
                     return false;
+                }
+                requestParentDisallowInterceptTouchEvent(true);
+                if (mSpring != null && !mSpring.isAtRest()) {
+                    mSpring.removeAllListeners();
+                    //mSpring.setAtRest();
                 }
                 mLastX = x;
                 mLastY = y;
@@ -182,6 +195,7 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
                     mLastX = x;
                     mLastY = y;
                     performDrag(dx, dy);
+                    onCoverMoved(x, y);
                 }
                 break;
             case MotionEvent.ACTION_POINTER_DOWN:
