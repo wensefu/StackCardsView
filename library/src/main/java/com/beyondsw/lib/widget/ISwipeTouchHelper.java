@@ -10,4 +10,6 @@ public interface ISwipeTouchHelper {
     boolean onInterceptTouchEvent(MotionEvent ev);
 
     boolean onTouchEvent(MotionEvent ev);
+
+    void onChildAddOrRemove();
 }

@@ -6,6 +6,12 @@ import android.view.View;
 import android.view.ViewConfiguration;
 import android.view.ViewParent;
 
+import com.beyondsw.lib.widget.rebound.SimpleSpringListener;
+import com.beyondsw.lib.widget.rebound.Spring;
+import com.beyondsw.lib.widget.rebound.SpringConfig;
+import com.beyondsw.lib.widget.rebound.SpringListener;
+import com.beyondsw.lib.widget.rebound.SpringSystem;
+
 /**
  * Created by wensefu on 17-2-12.
  */
@@ -18,15 +24,48 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
     private float mLastY;
     private int mTouchSlop;
     private boolean mIsBeingDragged;
-    private View mTouchableChild;
-    private float mCoverInitX;
-    private float mCoverInitY;
+    private View mTouchChild;
+    private float mChildInitX;
+    private float mChildInitY;
+    private float mAnimStartX;
+    private float mAnimStartY;
+
+    private SpringSystem mSpringSystem;
+    private Spring mSpring;
 
     public SwipeTouchHelper(BeyondSwipeCard view) {
         mSwipeView = view;
         final ViewConfiguration configuration = ViewConfiguration.get(view.getContext());
-        mTouchSlop = configuration.getScaledPagingTouchSlop();
+        mTouchSlop = configuration.getScaledTouchSlop();
         Log.d(TAG, "mTouchSlop=" + mTouchSlop);
+        updateFirstChild();
+
+        mSpringSystem = SpringSystem.create();
+    }
+
+    private SpringListener mSpringListener = new SimpleSpringListener() {
+        @Override
+        public void onSpringUpdate(Spring spring) {
+            float value = (float) spring.getCurrentValue();
+            Log.d(TAG, "onSpringUpdate: value=" + value);
+            mTouchChild.setX(mAnimStartX - (mAnimStartX - mChildInitX) * value);
+            mTouchChild.setY(mAnimStartY - (mAnimStartY - mChildInitY) * value);
+        }
+    };
+
+    private void updateFirstChild(){
+        if (mSwipeView.getChildCount() > 0) {
+            mTouchChild = mSwipeView.getChildAt(0);
+            mChildInitX = mTouchChild.getX();
+            mChildInitY = mTouchChild.getY();
+        } else {
+            mTouchChild = null;
+        }
+    }
+
+    @Override
+    public void onChildAddOrRemove() {
+        updateFirstChild();
     }
 
     private void requestParentDisallowInterceptTouchEvent(boolean disallowIntercept) {
@@ -37,8 +76,10 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
     }
 
     private boolean isTouchOnFirstChild(float x, float y) {
-        View first = mSwipeView.getChildAt(0);
-        return x >= first.getLeft() && x <= first.getRight() && y >= first.getTop() && y <= first.getBottom();
+        if (mTouchChild == null) {
+            return false;
+        }
+        return x >= mTouchChild.getLeft() && x <= mTouchChild.getRight() && y >= mTouchChild.getTop() && y <= mTouchChild.getBottom();
     }
 
     private boolean canDrag(float dx,float dy){
@@ -46,28 +87,51 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
         return true;
     }
 
+    private void performDrag(float dx, float dy) {
+        View cover = mSwipeView.getChildAt(0);
+        cover.setX(cover.getX() + dx);
+        cover.setY(cover.getY() + dy);
+        Log.d(TAG, "performDrag: dx=" + dx + "dy=" + dy + "left=" + cover.getLeft());
+    }
+
+    private void animateToInitPos() {
+        if (mTouchChild != null) {
+            if (mSpring != null) {
+                mSpring.removeAllListeners();
+            }
+            mAnimStartX = mTouchChild.getX();
+            mAnimStartY = mTouchChild.getY();
+            mSpring = mSpringSystem.createSpring();
+            mSpring.setSpringConfig(SpringConfig.fromOrigamiTensionAndFriction(40,5));
+            mSpring.addListener(mSpringListener);
+            mSpring.setEndValue(1);
+        }
+    }
+
     @Override
     public boolean onInterceptTouchEvent(MotionEvent ev) {
         if (!mSwipeView.isSwipeAllowed()) {
             return false;
         }
-        if (mSwipeView.getChildCount() == 0) {
+        if (mTouchChild == null) {
             return false;
         }
         float x = ev.getX();
         float y = ev.getY();
-        if (!isTouchOnFirstChild(x, y)) {
-            return false;
-        }
         final int action = ev.getAction() & MotionEvent.ACTION_MASK;
-        if (action == MotionEvent.ACTION_CANCEL || action == MotionEvent.ACTION_UP) {
-            mIsBeingDragged = false;
-            return false;
-        }
         switch (action) {
             case MotionEvent.ACTION_DOWN:
                 Log.d(TAG, "onInterceptTouchEvent: ACTION_DOWN,x=" + ev.getX());
                 requestParentDisallowInterceptTouchEvent(true);
+                if (mSpring != null && !mSpring.isAtRest()) {
+                    mSpring.removeAllListeners();
+                    //mSpring.setAtRest();
+                }
+                if (!isTouchOnFirstChild(x, y)) {
+                    Log.d(TAG, "onInterceptTouchEvent: !isTouchOnFirstChild");
+                    mIsBeingDragged = false;
+                    return false;
+                }
                 mLastX = x;
                 mLastY = y;
                 break;
@@ -77,9 +141,12 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
                 float dy = y - mLastY;
                 Log.d(TAG, "onInterceptTouchEvent: move,dx=" + dx + ",dy=" + dy);
                 if (canDrag(dx, dy) && Math.abs(dx) > mTouchSlop || Math.abs(dy) > mTouchSlop) {
-                    performDrag(dx,dy);
+                    //touchSlop这段距离忽略移动,防止第一次移动时抖动
+                    mLastX = x;
+                    mLastY = y;
                     mIsBeingDragged = true;
                 }
+                break;
             case MotionEvent.ACTION_POINTER_DOWN:
                 Log.d(TAG, "onInterceptTouchEvent: ACTION_POINTER_DOWN");
                 break;
@@ -96,13 +163,6 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
         return mIsBeingDragged;
     }
 
-    private void performDrag(float dx, float dy) {
-        View cover = mSwipeView.getChildAt(0);
-        cover.setX(cover.getX() + dx);
-        cover.setY(cover.getY() + dy);
-        Log.d(TAG, "performDrag: dx=" + dx + "dy=" + dy + "left=" + cover.getLeft());
-    }
-
     @Override
     public boolean onTouchEvent(MotionEvent ev) {
         final int action = ev.getAction() & MotionEvent.ACTION_MASK;
@@ -116,17 +176,20 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
                 break;
             case MotionEvent.ACTION_MOVE:
                 Log.d(TAG, "onTouchEvent: ACTION_MOVE");
-                float dx = x - mLastX;
-                float dy = y - mLastY;
-                mLastX = x;
-                mLastY = y;
-                performDrag(dx,dy);
+                if (mIsBeingDragged) {
+                    float dx = x - mLastX;
+                    float dy = y - mLastY;
+                    mLastX = x;
+                    mLastY = y;
+                    performDrag(dx, dy);
+                }
                 break;
             case MotionEvent.ACTION_POINTER_DOWN:
                 Log.d(TAG, "onTouchEvent: ACTION_POINTER_DOWN");
                 break;
             case MotionEvent.ACTION_UP:
                 Log.d(TAG, "onTouchEvent: ACTION_UP");
+                animateToInitPos();
                 mIsBeingDragged = false;
                 break;
             case MotionEvent.ACTION_POINTER_UP:
