@@ -11,7 +11,7 @@ import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.beyondsw.lib.widget.BeyondSwipeCard;
+import com.beyondsw.lib.widget.StackCardsView;
 import com.bumptech.glide.Glide;
 
 /**
@@ -37,7 +37,7 @@ public class TestActivity extends AppCompatActivity {
             View pageView;
             if (position == 0) {
                 pageView = View.inflate(TestActivity.this, R.layout.page1, null);
-                BeyondSwipeCard cardsView = (BeyondSwipeCard) pageView.findViewById(R.id.cards);
+                StackCardsView cardsView = (StackCardsView) pageView.findViewById(R.id.cards);
                 cardsView.setAdapter(new MyAdapter());
             } else {
                 pageView = View.inflate(TestActivity.this, R.layout.page2, null);

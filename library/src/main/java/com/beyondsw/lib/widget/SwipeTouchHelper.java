@@ -31,7 +31,7 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
 
     private static final String TAG = "SwipeTouchHelper";
 
-    private BeyondSwipeCard mSwipeView;
+    private StackCardsView mSwipeView;
     private float mLastX;
     private float mLastY;
     private int mTouchSlop;
@@ -47,7 +47,7 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
     private SpringSystem mSpringSystem;
     private Spring mSpring;
 
-    public SwipeTouchHelper(BeyondSwipeCard view) {
+    public SwipeTouchHelper(StackCardsView view) {
         mSwipeView = view;
         final ViewConfiguration configuration = ViewConfiguration.get(view.getContext());
         mTouchSlop = configuration.getScaledTouchSlop();
