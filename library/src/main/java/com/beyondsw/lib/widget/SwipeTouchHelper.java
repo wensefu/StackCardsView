@@ -23,7 +23,7 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
 
     //// TODO: 2017/2/14
     //1,速度大于一定值时卡片滑出消失
-//    2，滑动距离超过一定值后卡片消失，滑动过程中改变alpha值
+//    2，滑动距离超过一定值后卡片消失，消失过程中改变alpha值
 //    4，卡片消失后数据刷新
 //    5，滑动方向控制
 //    6，view缓存
@@ -141,6 +141,7 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
             @Override
             public void onAnimationEnd(Animator animation) {
                 super.onAnimationEnd(animation);
+                mSwipeView.onCardDismissed();
             }
             @Override
             public void onAnimationStart(Animator animation) {

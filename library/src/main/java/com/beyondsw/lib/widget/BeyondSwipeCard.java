@@ -212,6 +212,10 @@ public class BeyondSwipeCard extends ViewGroup {
         }
     }
 
+    void onCardDismissed() {
+
+    }
+
     void onCoverScrolled(float progress) {
         Log.d(TAG, "onCoverScrolled: progress=" + progress);
         final int cnt = getChildCount();
@@ -298,6 +302,9 @@ public class BeyondSwipeCard extends ViewGroup {
             cnt = Math.min(cnt, mMaxVisibleCnt + 1);
             for (int i = 0; i < cnt; i++) {
                 addViewInLayout(mAdapter.getView(i, null, this), -1, getDefaultLayoutParams(), false);
+            }
+            if (mTouchHelper != null) {
+                mTouchHelper.onChildAddOrRemove();
             }
             requestLayout();
         }
