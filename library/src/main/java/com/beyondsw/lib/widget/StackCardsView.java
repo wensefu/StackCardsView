@@ -93,7 +93,7 @@ public class StackCardsView extends FrameLayout {
 
     private List<OnCardSwipedListener> mCardSwipedListenrs;
 
-    private boolean mNeedScaleChild;
+    private boolean mNeedAdjustChild;
 
     public StackCardsView(Context context) {
         this(context, null);
@@ -193,8 +193,8 @@ public class StackCardsView extends FrameLayout {
     @Override
     protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
         super.onLayout(changed, left, top, right, bottom);
-        if (mNeedScaleChild) {
-            mNeedScaleChild = false;
+        if (mNeedAdjustChild) {
+            mNeedAdjustChild = false;
             final int cnt = getChildCount();
             if (cnt == 0) {
                 return;
@@ -325,7 +325,7 @@ public class StackCardsView extends FrameLayout {
             for (int i = 0; i < cnt; i++) {
                 addViewInLayout(mAdapter.getView(i, null, this), -1, getDefaultLayoutParams(), false);
             }
-            mNeedScaleChild = true;
+            mNeedAdjustChild = true;
             requestLayout();
         }
     }
