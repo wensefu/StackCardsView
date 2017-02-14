@@ -77,7 +77,7 @@ public class TestActivity extends AppCompatActivity {
         }
 
         @Override
-        public void onCardDismiss() {
+        public void onCardDismiss(int direction) {
             adapter.remove(0);
         }
     }

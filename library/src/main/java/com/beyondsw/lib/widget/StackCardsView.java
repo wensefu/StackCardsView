@@ -23,27 +23,27 @@ public class StackCardsView extends FrameLayout {
     private static final String TAG = "StackCardsView";
 
     /**
-     * 支持左滑
+     * 左滑
      */
     public static final int SWIPE_LEFT = 1;
 
     /**
-     * 支持右滑
+     * 右滑
      */
     public static final int SWIPE_RIGHT = 1 << 1;
 
     /**
-     * 支持上滑
+     * 上滑
      */
     public static final int SWIPE_UP = 1 << 2;
 
     /**
-     * 支持下滑
+     * 下滑
      */
     public static final int SWIPE_DOWN = 1 << 3;
 
     /**
-     * 允许任意方向滑动
+     * 任意方向滑动
      */
     public static final int SWIPE_ALL = SWIPE_LEFT | SWIPE_RIGHT | SWIPE_UP | SWIPE_DOWN;
 
@@ -106,7 +106,7 @@ public class StackCardsView extends FrameLayout {
 
     public interface OnCardSwipedListener {
 
-        void onCardDismiss();
+        void onCardDismiss(int direction);
     }
 
     public void addOnCardSwipedListener(OnCardSwipedListener listener) {
@@ -231,10 +231,10 @@ public class StackCardsView extends FrameLayout {
         }
     }
 
-    void onCardDismissed() {
+    void onCardDismissed(int direction) {
         if (mCardSwipedListenrs != null) {
             for (OnCardSwipedListener listener : mCardSwipedListenrs) {
-                listener.onCardDismiss();
+                listener.onCardDismiss(direction);
             }
         }
     }

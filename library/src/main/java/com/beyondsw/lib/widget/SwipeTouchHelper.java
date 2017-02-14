@@ -25,7 +25,6 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
     //1,速度大于一定值时卡片滑出消失
 //    2，滑动距离超过一定值后卡片消失，消失过程中改变alpha值
 //    4，卡片消失后数据刷新
-//    5，滑动方向控制
 //    6，view缓存
     // 7,多点触控处理
 
@@ -159,12 +158,13 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
         } else {
             targetX = mTouchChild.getX() - rect.width();
         }
+        final int direction = targetX>0?StackCardsView.SWIPE_RIGHT:StackCardsView.SWIPE_LEFT;
         ObjectAnimator animator = ObjectAnimator.ofFloat(mTouchChild, "x", targetX).setDuration(200);
         animator.addListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationEnd(Animator animation) {
                 super.onAnimationEnd(animation);
-                mSwipeView.onCardDismissed();
+                mSwipeView.onCardDismissed(direction);
             }
 
             @Override
