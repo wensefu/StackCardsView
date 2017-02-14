@@ -1,1 +1,1 @@
-# SwipeAdapterView
+# StackCardsView
