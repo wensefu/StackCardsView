@@ -1,6 +1,7 @@
 package com.beyondsw.lib.widget;
 
 import android.view.MotionEvent;
+import android.view.View;
 
 /**
  * Created by wensefu on 17-2-12.
@@ -11,5 +12,5 @@ public interface ISwipeTouchHelper {
 
     boolean onTouchEvent(MotionEvent ev);
 
-    void onChildLayouted();
+    void onCoverChanged(View cover);
 }

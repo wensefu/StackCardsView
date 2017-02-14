@@ -7,12 +7,11 @@ package com.beyondsw.widget;
 public class ImageUrls {
 
     public static final String[] images = {
-            "http://www.wallcoo.com/animal/MX069_Pretty_Puppies_puppy_garden_adventure/wallpapers/1920x1080/Garden_adventure_of_the_little_puppy_photos_pictures_puppy_MIL56021.jpg",
-            "http://img02.tooopen.com/images/20160427/tooopen_sy_160701449393.jpg",
-            "http://b.zol-img.com.cn/soft/6/474/ces6cAdQRcGGk.jpg",
-            "http://dl.bizhi.sogou.com/images/2012/04/23/175609.jpg",
-            "http://preview.quanjing.com/age_foto163/yr1-1285835.jpg",
-            "http://preview.quanjing.com/age_foto145/v57-1176961.jpg",
+            "http://imga.mumayi.com/android/img_mumayi/2013/12/20/47/477007/nologo/nologo_pic_477007_3e8c10.jpg",
+            "http://img5.imgtn.bdimg.com/it/u=1193357637,4072042986&fm=23&gp=0.jpg",
+            "http://img3.imgtn.bdimg.com/it/u=192130224,3269162499&fm=23&gp=0.jpg",
+            "http://image.tianjimedia.com/uploadImages/2016/112/04/YZ6JCSXWPQN1.jpg",
+            "http://img.lenovomm.com/s3/img/app/app-img-lestore/4239-2015-10-16103634-1445034994358.jpeg?isCompress=true&width=320&height=480&quantity=1&rotate=true",
             "http://picture.ik123.com/uploads/allimg/160708/12-160FQ51524.jpg",
             "http://picture.ik123.com/uploads/allimg/160708/12-160FQ51520.jpg",
             "http://p1.gexing.com/G1/M00/07/D0/rBACE1HvQVmB6PanAARHdydHEwg340.jpg",

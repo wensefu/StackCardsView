@@ -8,15 +8,15 @@
     >
     <com.beyondsw.widget.MyImageView
         android:id="@+id/img"
-        android:layout_width="300dp"
-        android:layout_height="260dp"
+        android:layout_width="280dp"
+        android:layout_height="300dp"
         android:scaleType="centerCrop"
         />
 
     <TextView
         android:id="@+id/text"
         android:layout_width="match_parent"
-        android:layout_height="80dp"
+        android:layout_height="60dp"
         android:textColor="@android:color/white"
         android:gravity="center"
         android:textSize="18dp"

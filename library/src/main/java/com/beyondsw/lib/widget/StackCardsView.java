@@ -4,9 +4,11 @@ import android.content.Context;
 import android.database.Observable;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,7 +18,7 @@ import java.util.List;
  * Created by wensefu on 2017/2/10.
  */
 
-public class StackCardsView extends ViewGroup {
+public class StackCardsView extends FrameLayout {
 
     private static final String TAG = "StackCardsView";
 
@@ -95,6 +97,8 @@ public class StackCardsView extends ViewGroup {
 
     private List<OnCardSwipedListener> mCardSwipedListenrs;
 
+    private boolean mNeedScaleChild;
+
     public StackCardsView(Context context) {
         this(context, null);
     }
@@ -132,18 +136,6 @@ public class StackCardsView extends ViewGroup {
     @Override
     public void addView(View child, int index) {
         throw new UnsupportedOperationException("addView(View, int) is not supported");
-    }
-
-    @Override
-    public void addView(View child, LayoutParams params) {
-        throw new UnsupportedOperationException("addView(View, LayoutParams) "
-                + "is not supported");
-    }
-
-    @Override
-    public void addView(View child, int index, LayoutParams params) {
-        throw new UnsupportedOperationException("addView(View, int, LayoutParams) "
-                + "is not supported");
     }
 
     @Override
@@ -195,37 +187,27 @@ public class StackCardsView extends ViewGroup {
     }
 
     @Override
-    protected void onLayout(boolean changed, int l, int t, int r, int b) {
-        Log.d(TAG, "onLayout,changed=" + changed + ",l=" + l + ",t=" + t + ",r=" + r + ",b=" + b);
-        final int cnt = getChildCount();
-        if (cnt == 0) {
-            return;
-        }
-        final int centerX = (r - l - getPaddingLeft() - getPaddingRight()) / 2;
-        final int centerY = (b - t - getPaddingBottom() - getPaddingTop()) / 2;
-        int layerIndex = 0;
-        mScaleArray = new float[cnt];
-        mAlphaArray = new float[cnt];
-        mTranslationYArray = new float[cnt];
-        mScaleArray[0] = 1;
-        mAlphaArray[0] = 1;
-        mTranslationYArray[0] = 0;
-        for (int i = 0; i < cnt; i++) {
-            View child = getChildAt(i);
-            if (child.getVisibility() != View.GONE) {
-                int half_childWidth = child.getMeasuredWidth() / 2;
+    protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
+        super.onLayout(changed, left, top, right, bottom);
+        if (mNeedScaleChild) {
+            mNeedScaleChild = false;
+            final int cnt = getChildCount();
+            if (cnt == 0) {
+                return;
+            }
+            int layerIndex = 0;
+            mScaleArray = new float[cnt];
+            mAlphaArray = new float[cnt];
+            mTranslationYArray = new float[cnt];
+            mScaleArray[0] = 1;
+            mAlphaArray[0] = 1;
+            mTranslationYArray[0] = 0;
+            for (int i = 0; i < cnt; i++) {
+                View child = getChildAt(i);
+                if (i == 0 && mTouchHelper != null) {
+                    mTouchHelper.onCoverChanged(child);
+                }
                 int half_childHeight = child.getMeasuredHeight() / 2;
-                int cl = centerX - half_childWidth;
-                int ct = centerY - half_childHeight;
-                int cr = centerX + half_childWidth;
-                int cb = centerY + half_childHeight;
-                Log.d(TAG, "onLayout: cl=" + cl + ",ct=" + ct + ",cr=" + cr + ",cb=" + cb + ",half_childWidth=" + half_childWidth + ",half_childHeight=" + half_childHeight
-                        + ",centerX=" + centerX + ",centerY=" + centerY+",="+child.isLayoutRequested());
-//                if (!child.isLayoutRequested()) {
-//                    continue;
-//                }
-                child.layout(centerX - half_childWidth, centerY - half_childHeight, centerX + half_childWidth, centerY + half_childHeight);
-
                 if (layerIndex > 0) {
                     float scale = 1 - layerIndex * (1 - mScaleFactor);
                     mScaleArray[i] = scale;
@@ -241,9 +223,6 @@ public class StackCardsView extends ViewGroup {
                 if (layerIndex < mMaxVisibleCnt - 1) {
                     layerIndex++;
                 }
-            }
-            if (mTouchHelper != null) {
-                mTouchHelper.onChildLayouted();
             }
         }
     }
@@ -268,17 +247,25 @@ public class StackCardsView extends ViewGroup {
         for (int i = 1; i < cnt; i++) {
             View child = getChildAt(i);
             if (child.getVisibility() != View.GONE) {
-                preScale = mScaleArray[i];
-                preAlpha = mAlphaArray[i];
-                preTranslationY = mTranslationYArray[i];
-                targetScale = mScaleArray[i - 1];
-                targetAlpha = mAlphaArray[i - 1];
-                targetTranslationY = mTranslationYArray[i - 1];
-                progressScale = preScale + (targetScale - preScale) * progress;
-                child.setScaleX(progressScale);
-                child.setScaleY(progressScale);
-                child.setAlpha(preAlpha + (targetAlpha - preAlpha) * progress);
-                child.setTranslationY(preTranslationY + (targetTranslationY - preTranslationY) * progress);
+                if (mScaleArray != null) {
+                    preScale = mScaleArray[i];
+                    targetScale = mScaleArray[i - 1];
+                    progressScale = preScale + (targetScale - preScale) * progress;
+                    child.setScaleX(progressScale);
+                    child.setScaleY(progressScale);
+                }
+
+                if (mAlphaArray != null) {
+                    preAlpha = mAlphaArray[i];
+                    targetAlpha = mAlphaArray[i - 1];
+                    child.setAlpha(preAlpha + (targetAlpha - preAlpha) * progress);
+                }
+
+                if (mTranslationYArray != null) {
+                    preTranslationY = mTranslationYArray[i];
+                    targetTranslationY = mTranslationYArray[i - 1];
+                    child.setTranslationY(preTranslationY + (targetTranslationY - preTranslationY) * progress);
+                }
             }
         }
     }
@@ -288,18 +275,6 @@ public class StackCardsView extends ViewGroup {
         return childCount - 1 - i;
     }
 
-    @Override
-    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        Log.d(TAG, "onMeasure");
-        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-        int childCount = getChildCount();
-        for (int i = 0; i < childCount; i++) {
-            View child = getChildAt(i);
-            if (child.getVisibility() != GONE) {
-                child.measure(widthMeasureSpec, heightMeasureSpec);
-            }
-        }
-    }
 
     @Override
     protected void onAttachedToWindow() {
@@ -330,8 +305,10 @@ public class StackCardsView extends ViewGroup {
     }
 
     private LayoutParams getDefaultLayoutParams() {
-        return new LayoutParams(LayoutParams.WRAP_CONTENT,
+        LayoutParams lp = new LayoutParams(LayoutParams.WRAP_CONTENT,
                 LayoutParams.WRAP_CONTENT);
+        lp.gravity = Gravity.CENTER;
+        return lp;
     }
 
     private void initChildren() {
@@ -344,6 +321,7 @@ public class StackCardsView extends ViewGroup {
             for (int i = 0; i < cnt; i++) {
                 addViewInLayout(mAdapter.getView(i, null, this), -1, getDefaultLayoutParams(), false);
             }
+            mNeedScaleChild = true;
             requestLayout();
         }
     }

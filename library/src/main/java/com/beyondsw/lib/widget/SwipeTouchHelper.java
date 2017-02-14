@@ -51,9 +51,7 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
         mSwipeView = view;
         final ViewConfiguration configuration = ViewConfiguration.get(view.getContext());
         mTouchSlop = configuration.getScaledTouchSlop();
-        Log.d(TAG, "mTouchSlop=" + mTouchSlop);
-        updateCoverInfo();
-
+        updateCoverInfo(null);
         mSpringSystem = SpringSystem.create();
     }
 
@@ -61,27 +59,29 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
         @Override
         public void onSpringUpdate(Spring spring) {
             float value = (float) spring.getCurrentValue();
-            Log.d(TAG, "onSpringUpdate: value=" + value);
             mTouchChild.setX(mAnimStartX - (mAnimStartX - mChildInitX) * value);
             mTouchChild.setY(mAnimStartY - (mAnimStartY - mChildInitY) * value);
             onCoverScrolled();
         }
     };
 
-    private void updateCoverInfo(){
-        if (mSwipeView.getChildCount() > 0) {
-            mTouchChild = mSwipeView.getChildAt(0);
+    private void updateCoverInfo(View cover) {
+        if (cover == null) {
+            if (mSwipeView.getChildCount() > 0) {
+                cover = mSwipeView.getChildAt(0);
+            }
+        }
+        mTouchChild = cover;
+        if (mTouchChild != null) {
             mChildInitX = mTouchChild.getX();
             mChildInitY = mTouchChild.getY();
             Log.d(TAG, "updateCoverInfo: mChildInitX=" + mChildInitX + ",mChildInitY=" + mChildInitY);
-        } else {
-            mTouchChild = null;
         }
     }
 
     @Override
-    public void onChildLayouted() {
-        updateCoverInfo();
+    public void onCoverChanged(View cover) {
+        updateCoverInfo(cover);
     }
 
     private void requestParentDisallowInterceptTouchEvent(boolean disallowIntercept) {
@@ -98,7 +98,7 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
         return x >= mTouchChild.getLeft() && x <= mTouchChild.getRight() && y >= mTouchChild.getTop() && y <= mTouchChild.getBottom();
     }
 
-    private boolean canDrag(float dx,float dy){
+    private boolean canDrag(float dx, float dy) {
         //// TODO: 17-2-13
         return true;
     }
@@ -119,7 +119,7 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
             mAnimStartX = mTouchChild.getX();
             mAnimStartY = mTouchChild.getY();
             mSpring = mSpringSystem.createSpring();
-            mSpring.setSpringConfig(SpringConfig.fromOrigamiTensionAndFriction(40,5));
+            mSpring.setSpringConfig(SpringConfig.fromOrigamiTensionAndFriction(40, 5));
             mSpring.addListener(mSpringListener);
             mSpring.setEndValue(1);
         }
@@ -137,13 +137,14 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
         } else {
             targetX = mTouchChild.getX() - rect.width();
         }
-        ObjectAnimator animator = ObjectAnimator.ofFloat(mTouchChild,"x",targetX).setDuration(200);
+        ObjectAnimator animator = ObjectAnimator.ofFloat(mTouchChild, "x", targetX).setDuration(200);
         animator.addListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationEnd(Animator animation) {
                 super.onAnimationEnd(animation);
                 mSwipeView.onCardDismissed();
             }
+
             @Override
             public void onAnimationStart(Animator animation) {
                 super.onAnimationStart(animation);
@@ -203,7 +204,6 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
                 requestParentDisallowInterceptTouchEvent(true);
                 if (mSpring != null && !mSpring.isAtRest()) {
                     mSpring.removeAllListeners();
-                    //mSpring.setAtRest();
                 }
                 mLastX = x;
                 mLastY = y;
