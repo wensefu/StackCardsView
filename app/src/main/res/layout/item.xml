@@ -6,7 +6,7 @@
     android:gravity="center"
               android:background="@android:color/holo_blue_light"
     >
-    <ImageView
+    <com.beyondsw.widget.MyImageView
         android:id="@+id/img"
         android:layout_width="300dp"
         android:layout_height="260dp"

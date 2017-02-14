@@ -52,7 +52,7 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
         final ViewConfiguration configuration = ViewConfiguration.get(view.getContext());
         mTouchSlop = configuration.getScaledTouchSlop();
         Log.d(TAG, "mTouchSlop=" + mTouchSlop);
-        updateFirstChild();
+        updateCoverInfo();
 
         mSpringSystem = SpringSystem.create();
     }
@@ -68,19 +68,20 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
         }
     };
 
-    private void updateFirstChild(){
+    private void updateCoverInfo(){
         if (mSwipeView.getChildCount() > 0) {
             mTouchChild = mSwipeView.getChildAt(0);
             mChildInitX = mTouchChild.getX();
             mChildInitY = mTouchChild.getY();
+            Log.d(TAG, "updateCoverInfo: mChildInitX=" + mChildInitX + ",mChildInitY=" + mChildInitY);
         } else {
             mTouchChild = null;
         }
     }
 
     @Override
-    public void onChildAddOrRemove() {
-        updateFirstChild();
+    public void onChildLayouted() {
+        updateCoverInfo();
     }
 
     private void requestParentDisallowInterceptTouchEvent(boolean disallowIntercept) {

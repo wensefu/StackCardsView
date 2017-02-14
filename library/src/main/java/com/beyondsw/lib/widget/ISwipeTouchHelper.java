@@ -11,5 +11,5 @@ public interface ISwipeTouchHelper {
 
     boolean onTouchEvent(MotionEvent ev);
 
-    void onChildAddOrRemove();
+    void onChildLayouted();
 }

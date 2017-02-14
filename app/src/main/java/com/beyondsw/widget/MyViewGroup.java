@@ -38,7 +38,7 @@ public class MyViewGroup extends LinearLayout{
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
         super.onLayout(changed, l, t, r, b);
         int cnt = getChildCount();
-        Log.d("lingchao", "MyViewGroup "+name+" onLayout,childcnt ="+cnt);
+        Log.d("lingchao", "MyViewGroup " + name + " onLayout,childcnt =" + cnt + ",changed=" + changed + ",l=" + l + ",t=" + t + ",r=" + r + ",b=" + b);
     }
 
     @Override

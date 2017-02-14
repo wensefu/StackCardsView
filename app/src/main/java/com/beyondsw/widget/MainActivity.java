@@ -28,12 +28,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if(v==view1){
             Log.d("lingchao", "onClick: ");
         }else{
-            Log.d("lingchao", "onClick-before: getTop=" + view1.getTop()+",getty="+view1.getTranslationY());
-            view1.setY(view1.getY()+2);
-            Log.d("lingchao", "onClick-after: getTop=" + view1.getTop()+",getty="+view1.getTranslationY());
-//            Log.d("lingchao", "onClick-before: getTop=" + view1.getTop());
-//            view1.setTranslationY((i++) * 5);
-//            Log.d("lingchao", "onClick-after: getTop=" + view1.getTop());
+            view1.forceLayout();
         }
 
     }

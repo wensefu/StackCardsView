@@ -8,6 +8,9 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 
+import java.util.ArrayList;
+import java.util.List;
+
 
 /**
  * Created by wensefu on 2017/2/10.
@@ -15,7 +18,7 @@ import android.view.ViewGroup;
 
 public class StackCardsView extends ViewGroup {
 
-    private static final String TAG = "BeyondSwipeCard";
+    private static final String TAG = "StackCardsView";
 
     /**
      * 禁止滑动
@@ -90,6 +93,8 @@ public class StackCardsView extends ViewGroup {
     private boolean mSwipeAllowed = true;
     private ISwipeTouchHelper mTouchHelper;
 
+    private List<OnCardSwipedListener> mCardSwipedListenrs;
+
     public StackCardsView(Context context) {
         this(context, null);
     }
@@ -97,6 +102,26 @@ public class StackCardsView extends ViewGroup {
     public StackCardsView(Context context, AttributeSet attrs) {
         super(context, attrs);
         setChildrenDrawingOrderEnabled(true);
+    }
+
+    public interface OnCardSwipedListener {
+
+        void onCardDismiss();
+    }
+
+    public void addOnCardSwipedListener(OnCardSwipedListener listener) {
+        if (mCardSwipedListenrs == null) {
+            mCardSwipedListenrs = new ArrayList<>();
+            mCardSwipedListenrs.add(listener);
+        } else if (!mCardSwipedListenrs.contains(listener)) {
+            mCardSwipedListenrs.add(listener);
+        }
+    }
+
+    public void removeOnCardSwipedListener(OnCardSwipedListener listener) {
+        if (mCardSwipedListenrs != null && mCardSwipedListenrs.contains(listener)) {
+            mCardSwipedListenrs.remove(listener);
+        }
     }
 
     @Override
@@ -171,7 +196,7 @@ public class StackCardsView extends ViewGroup {
 
     @Override
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
-        Log.d(TAG, "onLayout");
+        Log.d(TAG, "onLayout,changed=" + changed + ",l=" + l + ",t=" + t + ",r=" + r + ",b=" + b);
         final int cnt = getChildCount();
         if (cnt == 0) {
             return;
@@ -190,6 +215,15 @@ public class StackCardsView extends ViewGroup {
             if (child.getVisibility() != View.GONE) {
                 int half_childWidth = child.getMeasuredWidth() / 2;
                 int half_childHeight = child.getMeasuredHeight() / 2;
+                int cl = centerX - half_childWidth;
+                int ct = centerY - half_childHeight;
+                int cr = centerX + half_childWidth;
+                int cb = centerY + half_childHeight;
+                Log.d(TAG, "onLayout: cl=" + cl + ",ct=" + ct + ",cr=" + cr + ",cb=" + cb + ",half_childWidth=" + half_childWidth + ",half_childHeight=" + half_childHeight
+                        + ",centerX=" + centerX + ",centerY=" + centerY+",="+child.isLayoutRequested());
+//                if (!child.isLayoutRequested()) {
+//                    continue;
+//                }
                 child.layout(centerX - half_childWidth, centerY - half_childHeight, centerX + half_childWidth, centerY + half_childHeight);
 
                 if (layerIndex > 0) {
@@ -208,15 +242,21 @@ public class StackCardsView extends ViewGroup {
                     layerIndex++;
                 }
             }
+            if (mTouchHelper != null) {
+                mTouchHelper.onChildLayouted();
+            }
         }
     }
 
     void onCardDismissed() {
-
+        if (mCardSwipedListenrs != null) {
+            for (OnCardSwipedListener listener : mCardSwipedListenrs) {
+                listener.onCardDismiss();
+            }
+        }
     }
 
     void onCoverScrolled(float progress) {
-        Log.d(TAG, "onCoverScrolled: progress=" + progress);
         final int cnt = getChildCount();
         float preScale;
         float preAlpha;
@@ -296,15 +336,12 @@ public class StackCardsView extends ViewGroup {
     private void initChildren() {
         int cnt = mAdapter == null ? 0 : mAdapter.getCount();
         if (cnt == 0) {
-            removeAllViews();
+            removeAllViewsInLayout();
         } else {
-            removeAllViews();
+            removeAllViewsInLayout();
             cnt = Math.min(cnt, mMaxVisibleCnt + 1);
             for (int i = 0; i < cnt; i++) {
                 addViewInLayout(mAdapter.getView(i, null, this), -1, getDefaultLayoutParams(), false);
-            }
-            if (mTouchHelper != null) {
-                mTouchHelper.onChildAddOrRemove();
             }
             requestLayout();
         }
