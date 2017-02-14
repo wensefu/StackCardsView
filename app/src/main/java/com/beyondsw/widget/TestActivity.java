@@ -25,6 +25,7 @@ import java.util.List;
 public class TestActivity extends AppCompatActivity {
 
     private ViewPager mPager;
+    private StackCardsView stackCardsView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,7 +37,6 @@ public class TestActivity extends AppCompatActivity {
 
     private class MyPagerAdapter extends PagerAdapter implements StackCardsView.OnCardSwipedListener{
 
-        private StackCardsView stackCardsView;
         private CardAdapter adapter;
 
 
@@ -153,6 +153,13 @@ public class TestActivity extends AppCompatActivity {
             for (int i = 0; i < ImageUrls.images.length; i++) {
                 mImages.add(ImageUrls.images[i]);
             }
+
+            if(hasListView){
+                stackCardsView.removeSwipeDirection(StackCardsView.SWIPE_UP);
+                stackCardsView.removeSwipeDirection(StackCardsView.SWIPE_DOWN);
+            }else{
+                stackCardsView.addSwipeDirection(StackCardsView.SWIPE_ALL);
+            }
         }
 
         @Override
@@ -218,6 +225,12 @@ public class TestActivity extends AppCompatActivity {
                     mImages.remove(pos);
                     notifyDataSetChanged();
                 }
+            }
+            if(hasListView){
+                stackCardsView.removeSwipeDirection(StackCardsView.SWIPE_UP);
+                stackCardsView.removeSwipeDirection(StackCardsView.SWIPE_DOWN);
+            }else{
+                stackCardsView.addSwipeDirection(StackCardsView.SWIPE_ALL);
             }
         }
     }

@@ -23,11 +23,6 @@ public class StackCardsView extends FrameLayout {
     private static final String TAG = "StackCardsView";
 
     /**
-     * 禁止滑动
-     */
-    public static final int SWIPE_NONE = 0;
-
-    /**
      * 支持左滑
      */
     public static final int SWIPE_LEFT = 1;
@@ -40,17 +35,19 @@ public class StackCardsView extends FrameLayout {
     /**
      * 支持上滑
      */
-    public static final int SWIPE_TOP = 1 << 2;
+    public static final int SWIPE_UP = 1 << 2;
 
     /**
      * 支持下滑
      */
-    public static final int SWIPE_BOTTOM = 1 << 3;
+    public static final int SWIPE_DOWN = 1 << 3;
 
     /**
      * 允许任意方向滑动
      */
-    public static final int SWIPE_ALL = SWIPE_LEFT | SWIPE_RIGHT | SWIPE_TOP | SWIPE_BOTTOM;
+    public static final int SWIPE_ALL = SWIPE_LEFT | SWIPE_RIGHT | SWIPE_UP | SWIPE_DOWN;
+
+    private int mSwipeDirection = SWIPE_ALL;
 
     private Adapter mAdapter;
 
@@ -154,32 +151,40 @@ public class StackCardsView extends FrameLayout {
     }
 
     /**
-     * 设置可以滑动的方向<br/>
+     * 设置可以滑动的方向,支持以下值:<br/>
+     * {@link #SWIPE_ALL},<br/>
+     * {@link #SWIPE_LEFT},<br/>
+     * {@link #SWIPE_RIGHT},<br/>
+     * {@link #SWIPE_UP},<br/>
+     * {@link #SWIPE_DOWN},<br/>
      *
-     * @param direction
-     * @see #SWIPE_ALL
-     * @see #SWIPE_LEFT
-     * @see #SWIPE_RIGHT
-     * @see #SWIPE_TOP
-     * @see #SWIPE_BOTTOM
-     * @see #SWIPE_NONE
+     * @param direction 方向
      */
-    public void setSwipeDirection(int direction) {
-
+    public void addSwipeDirection(int direction) {
+        mSwipeDirection |= direction;
     }
 
-    public void setSwipeAllowed(boolean allowed) {
-        if (mSwipeAllowed != allowed) {
-            mSwipeAllowed = allowed;
-        }
+    /**
+     * 设置某个方向不可以滑动,支持以下值:<br/>
+     * <p>
+     * {@link #SWIPE_ALL},<br/>
+     * {@link #SWIPE_LEFT},<br/>
+     * {@link #SWIPE_RIGHT},<br/>
+     * {@link #SWIPE_UP},<br/>
+     * {@link #SWIPE_DOWN},<br/>
+     *
+     * @param direction 方向
+     */
+    public void removeSwipeDirection(int direction) {
+        mSwipeDirection &= ~direction;
+    }
+
+    public int getSwipeDirection() {
+        return mSwipeDirection;
     }
 
     float getMaxRotation() {
         return mMaxRotation;
-    }
-
-    public boolean isSwipeAllowed() {
-        return mSwipeAllowed;
     }
 
     public int getDismissDistance() {
