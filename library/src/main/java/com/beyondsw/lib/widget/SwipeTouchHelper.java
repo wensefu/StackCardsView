@@ -1,5 +1,9 @@
 package com.beyondsw.lib.widget;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.animation.ObjectAnimator;
+import android.graphics.Rect;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
@@ -17,11 +21,13 @@ import com.beyondsw.lib.widget.rebound.SpringSystem;
  */
 public class SwipeTouchHelper implements ISwipeTouchHelper {
 
+    //// TODO: 2017/2/14
     //1,速度大于一定值时卡片滑出消失
 //    2，滑动距离超过一定值后卡片消失，滑动过程中改变alpha值
 //    4，卡片消失后数据刷新
 //    5，滑动方向控制
 //    6，view缓存
+    // 7,多点触控处理
 
     private static final String TAG = "SwipeTouchHelper";
 
@@ -118,8 +124,30 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
         }
     }
 
-    private void animateToDisappear(){
-
+    private void animateToDisappear() {
+        if (mTouchChild == null) {
+            return;
+        }
+        Rect rect = new Rect();
+        mTouchChild.getGlobalVisibleRect(rect);
+        float targetX;
+        if (rect.left > 0) {
+            targetX = mTouchChild.getX() + rect.width();
+        } else {
+            targetX = mTouchChild.getX() - rect.width();
+        }
+        ObjectAnimator animator = ObjectAnimator.ofFloat(mTouchChild,"x",targetX).setDuration(200);
+        animator.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                super.onAnimationEnd(animation);
+            }
+            @Override
+            public void onAnimationStart(Animator animation) {
+                super.onAnimationStart(animation);
+            }
+        });
+        animator.start();
     }
 
     private void onCoverScrolled() {
@@ -232,12 +260,11 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
                 break;
             case MotionEvent.ACTION_UP:
                 Log.d(TAG, "onTouchEvent: ACTION_UP");
-//                if (mShouldDisappear) {
-//
-//                } else {
-//                    animateToInitPos();
-//                }
-                animateToInitPos();
+                if (mShouldDisappear) {
+                    animateToDisappear();
+                } else {
+                    animateToInitPos();
+                }
                 mIsBeingDragged = false;
                 break;
             case MotionEvent.ACTION_POINTER_UP:
