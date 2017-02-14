@@ -5,6 +5,7 @@ import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.widget.LinearLayout;
 
 /**
@@ -45,5 +46,19 @@ public class MyViewGroup extends LinearLayout{
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
         Log.d("lingchao", "MyViewGroup " + name + " onMeasure");
+    }
+
+    @Override
+    public boolean onInterceptTouchEvent(MotionEvent ev) {
+        int action = ev.getAction();
+        Log.d("touchtest", "MyViewGroup onInterceptTouchEvent: action=" + action);
+        return false;
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        int action = event.getAction();
+        Log.d("touchtest", "MyViewGroup onTouchEvent: action="+action);
+        return true;
     }
 }

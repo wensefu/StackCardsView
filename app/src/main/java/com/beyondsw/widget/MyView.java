@@ -5,6 +5,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 
 /**
@@ -38,5 +39,12 @@ public class MyView extends View{
         super.onDraw(canvas);
         Log.d("lingchao", "MyView onDraw,height="+getHeight());
         canvas.drawColor(Color.BLUE);
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        int action = event.getAction();
+        Log.d("touchtest", "MyView onTouchEvent: action="+action);
+        return super.onTouchEvent(event);
     }
 }
