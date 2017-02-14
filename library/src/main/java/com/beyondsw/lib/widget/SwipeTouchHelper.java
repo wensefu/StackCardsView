@@ -31,6 +31,7 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
 
     private static final String TAG = "SwipeTouchHelper";
 
+    private static final float SLOPE = 1.732f;
     private StackCardsView mSwipeView;
     private float mInitDownX;
     private float mInitDownY;
@@ -108,8 +109,8 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
         } else if (direction == 0) {
             return false;
         }
-        //水平角度小于60度时，认为是水平滑动
-        if (Math.abs(dx) * 1.732f > Math.abs(dy)) {
+        //斜率小于SLOPE时，认为是水平滑动
+        if (Math.abs(dx) * SLOPE > Math.abs(dy)) {
             if (dx > 0) {
                 return (direction & StackCardsView.SWIPE_RIGHT) != 0;
             } else {
@@ -196,7 +197,9 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
         int dismiss_distance = mSwipeView.getDismissDistance();
         if (distance >= dismiss_distance) {
             mSwipeView.onCoverScrolled(1);
-            mShouldDisappear = true;
+            if (Math.abs(dx) * SLOPE > Math.abs(dy)) {
+                mShouldDisappear = true;
+            }
         } else {
             mSwipeView.onCoverScrolled((float) distance / dismiss_distance);
             mShouldDisappear = false;

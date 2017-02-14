@@ -89,7 +89,6 @@ public class StackCardsView extends FrameLayout {
     private float[] mAlphaArray;
     private float[] mTranslationYArray;
 
-    private boolean mSwipeAllowed = true;
     private ISwipeTouchHelper mTouchHelper;
 
     private List<OnCardSwipedListener> mCardSwipedListenrs;
