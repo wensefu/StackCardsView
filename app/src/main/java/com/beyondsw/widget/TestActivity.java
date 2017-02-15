@@ -184,7 +184,7 @@ public class TestActivity extends AppCompatActivity {
                     });
                 }else{
                     view = View.inflate(TestActivity.this, R.layout.item, null);
-                    view.setOnClickListener(this);
+                    //view.setOnClickListener(this);
                     MyImageView img = (MyImageView) view.findViewById(R.id.img);
                     img.setPos(position);
                     TextView textView = (TextView) view.findViewById(R.id.text);
