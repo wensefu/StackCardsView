@@ -42,8 +42,10 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
     private View mTouchChild;
     private float mChildInitX;
     private float mChildInitY;
+    private float mChildInitRotation;
     private float mAnimStartX;
     private float mAnimStartY;
+    private float mAnimStartRotation;
 
     private boolean mShouldDisappear;
 
@@ -64,6 +66,7 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
             float value = (float) spring.getCurrentValue();
             mTouchChild.setX(mAnimStartX - (mAnimStartX - mChildInitX) * value);
             mTouchChild.setY(mAnimStartY - (mAnimStartY - mChildInitY) * value);
+            mTouchChild.setRotation(mAnimStartRotation - (mAnimStartRotation - mChildInitRotation) * value);
             onCoverScrolled();
         }
 
@@ -85,6 +88,7 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
         if (mTouchChild != null) {
             mChildInitX = mTouchChild.getX();
             mChildInitY = mTouchChild.getY();
+            mChildInitRotation = mTouchChild.getRotation();
             Log.d(TAG, "updateCoverInfo: mChildInitX=" + mChildInitX + ",mChildInitY=" + mChildInitY);
         }
     }
@@ -145,8 +149,15 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
         View cover = mSwipeView.getChildAt(0);
         cover.setX(cover.getX() + dx);
         cover.setY(cover.getY() + dy);
+        float rotation = dx / (mTouchSlop * 2) + cover.getRotation();
+        final float maxRotation = mSwipeView.getMaxRotation();
+        if (rotation > maxRotation) {
+            rotation = maxRotation;
+        } else if (rotation < -maxRotation) {
+            rotation = -maxRotation;
+        }
+        cover.setRotation(rotation);
         onCoverScrolled();
-        Log.d(TAG, "performDrag: dx=" + dx + "dy=" + dy + "left=" + cover.getLeft());
     }
 
     private void animateToInitPos() {
@@ -156,6 +167,7 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
             }
             mAnimStartX = mTouchChild.getX();
             mAnimStartY = mTouchChild.getY();
+            mAnimStartRotation = mTouchChild.getRotation();
             mSpring = mSpringSystem.createSpring();
             mSpring.setSpringConfig(SpringConfig.fromOrigamiTensionAndFriction(40, 5));
             mSpring.addListener(mSpringListener);
@@ -202,19 +214,6 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
         }
         float dx = mTouchChild.getX() - mChildInitX;
         float dy = mTouchChild.getY() - mChildInitY;
-        if (dx == 0) {
-            mTouchChild.setRotation(0);
-        } else {
-            float maxRotation = mSwipeView.getMaxRotation();
-            float rotation = maxRotation * (2 * dx / mTouchChild.getWidth());
-            if (rotation > maxRotation) {
-                rotation = maxRotation;
-            } else if (rotation < -maxRotation) {
-                rotation = -maxRotation;
-            }
-
-            mTouchChild.setRotation(0);
-        }
         double distance = Math.sqrt(dx * dx + dy * dy);
         int dismiss_distance = mSwipeView.getDismissDistance();
         if (distance >= dismiss_distance) {
@@ -252,11 +251,6 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
                     return false;
                 }
                 requestParentDisallowInterceptTouchEvent(true);
-                if (mSpring != null && !mSpring.isAtRest()) {
-                    mSpring.setAtRest();
-                    mSpring.removeAllListeners();
-                    mSwipeView.onCoverStatusChanged(isCoverIdle());
-                }
                 mInitDownX = x;
                 mInitDownY = y;
                 break;
@@ -267,6 +261,10 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
                 if (Math.sqrt(dx * dx + dy * dy) > mTouchSlop && canDrag(dx, dy)) {
                     Log.d(TAG, "onInterceptTouchEvent: mIsBeingDragged = true");
                     mIsBeingDragged = true;
+                    if (mSpring != null && !mSpring.isAtRest()) {
+                        mSpring.setAtRest();
+                        mSpring.removeAllListeners();
+                    }
                 }
                 mLastX = x;
                 mLastY = y;

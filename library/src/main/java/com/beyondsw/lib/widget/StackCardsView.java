@@ -83,7 +83,7 @@ public class StackCardsView extends FrameLayout {
     private float mDismissAlpha = DISMISS_ALPHA;
 
     //滑动时的最大旋转角度
-    private float mMaxRotation = 6;
+    private float mMaxRotation = 8;
 
     private float[] mScaleArray;
     private float[] mAlphaArray;
