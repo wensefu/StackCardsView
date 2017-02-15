@@ -94,6 +94,7 @@ public class StackCardsView extends FrameLayout {
     private List<OnCardSwipedListener> mCardSwipedListenrs;
 
     private boolean mNeedAdjustChild;
+    private Runnable mPendingTask;
 
     public StackCardsView(Context context) {
         this(context, null);
@@ -193,6 +194,7 @@ public class StackCardsView extends FrameLayout {
     @Override
     protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
         super.onLayout(changed, left, top, right, bottom);
+        Log.d(TAG, "onLayout: mNeedAdjustChild=" + mNeedAdjustChild);
         if (mNeedAdjustChild) {
             mNeedAdjustChild = false;
             final int cnt = getChildCount();
@@ -227,6 +229,15 @@ public class StackCardsView extends FrameLayout {
                 if (layerIndex < mMaxVisibleCnt - 1) {
                     layerIndex++;
                 }
+            }
+        }
+    }
+
+    void onCoverStatusChanged(boolean idle) {
+        if (idle) {
+            if (mPendingTask != null) {
+                mPendingTask.run();
+                mPendingTask = null;
             }
         }
     }
@@ -342,7 +353,16 @@ public class StackCardsView extends FrameLayout {
         @Override
         public void onDataSetChanged() {
             super.onDataSetChanged();
-            initChildren();
+            if (mTouchHelper != null && !mTouchHelper.isCoverIdle()) {
+                mPendingTask = new Runnable() {
+                    @Override
+                    public void run() {
+                        initChildren();
+                    }
+                };
+            } else {
+                initChildren();
+            }
         }
 
         @Override

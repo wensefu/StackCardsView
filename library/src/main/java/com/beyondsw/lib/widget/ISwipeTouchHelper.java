@@ -13,4 +13,6 @@ public interface ISwipeTouchHelper {
     boolean onTouchEvent(MotionEvent ev);
 
     void onCoverChanged(View cover);
+
+    boolean isCoverIdle();
 }

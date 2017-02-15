@@ -16,6 +16,7 @@ import com.beyondsw.lib.widget.rebound.SpringConfig;
 import com.beyondsw.lib.widget.rebound.SpringListener;
 import com.beyondsw.lib.widget.rebound.SpringSystem;
 
+
 /**
  * Created by wensefu on 17-2-12.
  */
@@ -65,6 +66,13 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
             mTouchChild.setY(mAnimStartY - (mAnimStartY - mChildInitY) * value);
             onCoverScrolled();
         }
+
+        @Override
+        public void onSpringAtRest(Spring spring) {
+            super.onSpringAtRest(spring);
+            Log.d(TAG, "onSpringAtRest: ");
+            mSwipeView.onCoverStatusChanged(isCoverIdle());
+        }
     };
 
     private void updateCoverInfo(View cover) {
@@ -79,6 +87,15 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
             mChildInitY = mTouchChild.getY();
             Log.d(TAG, "updateCoverInfo: mChildInitX=" + mChildInitX + ",mChildInitY=" + mChildInitY);
         }
+    }
+
+    @Override
+    public boolean isCoverIdle() {
+        if (mTouchChild == null) {
+            return true;
+        }
+        boolean springIdle = mSpring == null || mSpring.isAtRest();
+        return springIdle && !mIsBeingDragged;
     }
 
     @Override
@@ -143,6 +160,7 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
             mSpring.setSpringConfig(SpringConfig.fromOrigamiTensionAndFriction(40, 5));
             mSpring.addListener(mSpringListener);
             mSpring.setEndValue(1);
+            mSwipeView.onCoverStatusChanged(false);
         }
     }
 
@@ -158,18 +176,21 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
         } else {
             targetX = mTouchChild.getX() - rect.width();
         }
-        final int direction = targetX>0?StackCardsView.SWIPE_RIGHT:StackCardsView.SWIPE_LEFT;
+        final int direction = targetX > 0 ? StackCardsView.SWIPE_RIGHT : StackCardsView.SWIPE_LEFT;
         ObjectAnimator animator = ObjectAnimator.ofFloat(mTouchChild, "x", targetX).setDuration(200);
         animator.addListener(new AnimatorListenerAdapter() {
+
             @Override
             public void onAnimationEnd(Animator animation) {
                 super.onAnimationEnd(animation);
                 mSwipeView.onCardDismissed(direction);
+                mSwipeView.onCoverStatusChanged(isCoverIdle());
             }
 
             @Override
             public void onAnimationStart(Animator animation) {
                 super.onAnimationStart(animation);
+                mSwipeView.onCoverStatusChanged(false);
             }
         });
         animator.start();
@@ -191,7 +212,8 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
             } else if (rotation < -maxRotation) {
                 rotation = -maxRotation;
             }
-            mTouchChild.setRotation(rotation);
+
+            mTouchChild.setRotation(0);
         }
         double distance = Math.sqrt(dx * dx + dy * dy);
         int dismiss_distance = mSwipeView.getDismissDistance();
@@ -231,7 +253,9 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
                 }
                 requestParentDisallowInterceptTouchEvent(true);
                 if (mSpring != null && !mSpring.isAtRest()) {
+                    mSpring.setAtRest();
                     mSpring.removeAllListeners();
+                    mSwipeView.onCoverStatusChanged(isCoverIdle());
                 }
                 mInitDownX = x;
                 mInitDownY = y;
