@@ -17,6 +17,8 @@ import com.bumptech.glide.Glide;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by wensefu on 2017/2/12.
@@ -26,6 +28,7 @@ public class TestActivity extends AppCompatActivity {
 
     private ViewPager mPager;
     private StackCardsView stackCardsView;
+    private final List<String> mImages = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,7 +38,9 @@ public class TestActivity extends AppCompatActivity {
         mPager.setAdapter(new MyPagerAdapter());
     }
 
-    private class MyPagerAdapter extends PagerAdapter implements StackCardsView.OnCardSwipedListener{
+    Random random = new Random();
+
+    private class MyPagerAdapter extends PagerAdapter implements StackCardsView.OnCardSwipedListener {
 
         private CardAdapter adapter;
 
@@ -79,37 +84,65 @@ public class TestActivity extends AppCompatActivity {
         @Override
         public void onCardDismiss(int direction) {
             adapter.remove(0);
+            if (adapter.getCount() < 2) {
+                stackCardsView.removeSwipeDirection(StackCardsView.SWIPE_ALL);
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            TimeUnit.MILLISECONDS.sleep(random.nextInt(1000));
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                        for (int i = 0; i < ImageUrls.images.length; i++) {
+                            mImages.add(ImageUrls.images[i]);
+                        }
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                adapter.notifyDataSetChanged();
+                                if(adapter.getCount()>1){
+                                    stackCardsView.addSwipeDirection(StackCardsView.SWIPE_ALL);
+                                }
+                            }
+                        });
+                    }
+                }).start();
+            }else{
+                stackCardsView.addSwipeDirection(StackCardsView.SWIPE_ALL);
+            }
         }
     }
 
-    private class TextAdapter extends BaseAdapter{
+
+    private class TextAdapter extends BaseAdapter {
 
         String[] textArray = {
-              "1111111111111111111",
-              "2222222222222",
-              "3333333333333333",
-              "44444444444444",
-              "555555555555",
-              "666666666666666",
-              "7777777777",
-              "88888888888",
-              "999999",
-              "aaaaaaaaaa",
-              "bbbbbbbbbbb",
-              "cccccccccccccccccc",
-              "ddddddddddddddd",
-              "eeeeeeeeeeeee",
-              "fffffffffffffffff",
-              "ggggggggggg",
-              "hhhhhhhhhhhhhhhhhhhhhh",
-              "iiiiiiiiiiiiiiiiiiiiiii",
-              "jjjjjjjjjjjjjjjjjjjjjjjjj",
-              "kkkkkkkkkkkkkkkkkkkkk",
-              "lllllllllllllll",
-              "mmmmmmmmmmmmmm",
-              "nnnnnnnnnnnnnnn",
-              "ooooooooooooo",
-              "pppppppppp",
+                "1111111111111111111",
+                "2222222222222",
+                "3333333333333333",
+                "44444444444444",
+                "555555555555",
+                "666666666666666",
+                "7777777777",
+                "88888888888",
+                "999999",
+                "aaaaaaaaaa",
+                "bbbbbbbbbbb",
+                "cccccccccccccccccc",
+                "ddddddddddddddd",
+                "eeeeeeeeeeeee",
+                "fffffffffffffffff",
+                "ggggggggggg",
+                "hhhhhhhhhhhhhhhhhhhhhh",
+                "iiiiiiiiiiiiiiiiiiiiiii",
+                "jjjjjjjjjjjjjjjjjjjjjjjjj",
+                "kkkkkkkkkkkkkkkkkkkkk",
+                "lllllllllllllll",
+                "mmmmmmmmmmmmmm",
+                "nnnnnnnnnnnnnnn",
+                "ooooooooooooo",
+                "pppppppppp",
         };
 
 
@@ -132,39 +165,37 @@ public class TestActivity extends AppCompatActivity {
         public View getView(int position, View convertView, ViewGroup parent) {
             TextView textView;
             if (convertView == null) {
-                convertView = View.inflate(TestActivity.this,R.layout.child_item,null);
-                textView = (TextView)convertView.findViewById(R.id.text);
+                convertView = View.inflate(TestActivity.this, R.layout.child_item, null);
+                textView = (TextView) convertView.findViewById(R.id.text);
                 convertView.setTag(textView);
-            }else{
-                textView = (TextView)convertView.getTag();
+            } else {
+                textView = (TextView) convertView.getTag();
             }
             textView.setText(textArray[position]);
             return convertView;
         }
     }
 
-    private class CardAdapter extends StackCardsView.Adapter implements View.OnClickListener{
+    private class CardAdapter extends StackCardsView.Adapter implements View.OnClickListener {
 
-        private final List<String> mImages;
-        boolean hasListView = true;
+        boolean hasListView = false;
 
-        CardAdapter(){
-            mImages = new ArrayList<>(ImageUrls.images.length);
+        CardAdapter() {
             for (int i = 0; i < ImageUrls.images.length; i++) {
                 mImages.add(ImageUrls.images[i]);
             }
 
-            if(hasListView){
+            if (hasListView) {
                 stackCardsView.removeSwipeDirection(StackCardsView.SWIPE_UP);
                 stackCardsView.removeSwipeDirection(StackCardsView.SWIPE_DOWN);
-            }else{
+            } else {
                 stackCardsView.addSwipeDirection(StackCardsView.SWIPE_ALL);
             }
         }
 
         @Override
         public int getCount() {
-            return hasListView ? mImages.size() + 1 : mImages.size();
+            return hasListView ? mImages.size() + 2 : mImages.size() + 1;
         }
 
         @Override
@@ -182,7 +213,7 @@ public class TestActivity extends AppCompatActivity {
                             Log.d("SwipeTouchHelper", "AdapterView onItemClick: position=" + position);
                         }
                     });
-                }else{
+                } else {
                     view = View.inflate(TestActivity.this, R.layout.item, null);
                     //view.setOnClickListener(this);
                     MyImageView img = (MyImageView) view.findViewById(R.id.img);
@@ -196,6 +227,9 @@ public class TestActivity extends AppCompatActivity {
                             .into(img);
                 }
             } else {
+                if (position == getCount() - 1) {
+                    return View.inflate(TestActivity.this, R.layout.child_item2, null);
+                }
                 view = View.inflate(TestActivity.this, R.layout.item, null);
                 view.setOnClickListener(this);
                 MyImageView img = (MyImageView) view.findViewById(R.id.img);
@@ -207,6 +241,8 @@ public class TestActivity extends AppCompatActivity {
                         .placeholder(R.drawable.img_dft)
                         .crossFade()
                         .into(img);
+//                view.setAlpha(0.3f);
+//                view.animate().alpha(1).setDuration(100).start();
             }
             return view;
         }
@@ -220,16 +256,16 @@ public class TestActivity extends AppCompatActivity {
             if (hasListView) {
                 hasListView = false;
                 notifyDataSetChanged();
-            }else{
+            } else {
                 if (pos >= 0 && pos < mImages.size()) {
                     mImages.remove(pos);
                     notifyDataSetChanged();
                 }
             }
-            if(hasListView){
+            if (hasListView) {
                 stackCardsView.removeSwipeDirection(StackCardsView.SWIPE_UP);
                 stackCardsView.removeSwipeDirection(StackCardsView.SWIPE_DOWN);
-            }else{
+            } else {
                 stackCardsView.addSwipeDirection(StackCardsView.SWIPE_ALL);
             }
         }
