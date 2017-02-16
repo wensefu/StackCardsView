@@ -29,7 +29,7 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
 //    6，view缓存
     // 7,多点触控处理
 
-    private static final String TAG = "SwipeTouchHelper";
+    private static final String TAG = "StackCardsView-touch";
 
     private static final float SLOPE = 1.732f;
     private StackCardsView mSwipeView;
@@ -39,6 +39,7 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
     private float mLastY;
     private int mTouchSlop;
     private boolean mIsBeingDragged;
+    private boolean mIsDisappearing;
     private View mTouchChild;
     private float mChildInitX;
     private float mChildInitY;
@@ -180,6 +181,7 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
         if (mTouchChild == null) {
             return;
         }
+        mIsDisappearing = true;
         Rect rect = new Rect();
         mTouchChild.getGlobalVisibleRect(rect);
         float targetX;
@@ -197,6 +199,8 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
                 super.onAnimationEnd(animation);
                 mSwipeView.onCardDismissed(direction);
                 mSwipeView.onCoverStatusChanged(isCoverIdle());
+                mIsDisappearing = false;
+                mSwipeView.adjustChildren();
             }
 
             @Override
@@ -240,6 +244,9 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
         }
         if (mIsBeingDragged && action != MotionEvent.ACTION_DOWN) {
             return true;
+        }
+        if (mIsDisappearing) {
+            return false;
         }
         final float x = ev.getX();
         final float y = ev.getY();
@@ -287,6 +294,9 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
         switch (action) {
             case MotionEvent.ACTION_DOWN:
                 Log.d(TAG, "onTouchEvent: ACTION_DOWN");
+                if (mSwipeView.getSwipeDirection() == 0) {
+                    return false;
+                }
                 mIsBeingDragged = true;
                 mLastX = x;
                 mLastY = y;
@@ -295,7 +305,7 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
                 Log.d(TAG, "onTouchEvent: ACTION_MOVE,mIsBeingDragged=" + mIsBeingDragged);
                 float dx = x - mLastX;
                 float dy = y - mLastY;
-                if (mIsBeingDragged) {
+                if (mIsBeingDragged && !mIsDisappearing) {
                     performDrag(dx, dy);
                 } else {
                     Log.e(TAG, "onTouchEvent: ACTION_MOVE,mIsBeingDragged=false");
@@ -306,6 +316,7 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
             case MotionEvent.ACTION_POINTER_DOWN:
                 Log.d(TAG, "onTouchEvent: ACTION_POINTER_DOWN");
                 break;
+            case MotionEvent.ACTION_CANCEL:
             case MotionEvent.ACTION_UP:
                 Log.d(TAG, "onTouchEvent: ACTION_UP");
                 if (mShouldDisappear) {
@@ -317,10 +328,6 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
                 break;
             case MotionEvent.ACTION_POINTER_UP:
                 Log.d(TAG, "onTouchEvent: ACTION_POINTER_UP");
-                break;
-            case MotionEvent.ACTION_CANCEL:
-                Log.d(TAG, "onTouchEvent: ACTION_CANCEL");
-                mIsBeingDragged = false;
                 break;
         }
         return true;

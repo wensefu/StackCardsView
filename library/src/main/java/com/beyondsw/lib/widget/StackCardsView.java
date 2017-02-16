@@ -194,41 +194,44 @@ public class StackCardsView extends FrameLayout {
     @Override
     protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
         super.onLayout(changed, left, top, right, bottom);
-        Log.d(TAG, "onLayout: mNeedAdjustChild=" + mNeedAdjustChild);
         if (mNeedAdjustChild) {
             mNeedAdjustChild = false;
-            final int cnt = getChildCount();
-            if (cnt == 0) {
-                return;
+            adjustChildren();
+        }
+    }
+
+    void adjustChildren() {
+        final int cnt = getChildCount();
+        if (cnt == 0) {
+            return;
+        }
+        int layerIndex = 0;
+        mScaleArray = new float[cnt];
+        mAlphaArray = new float[cnt];
+        mTranslationYArray = new float[cnt];
+        mScaleArray[0] = 1;
+        mAlphaArray[0] = 1;
+        mTranslationYArray[0] = 0;
+        for (int i = 0; i < cnt; i++) {
+            View child = getChildAt(i);
+            int half_childHeight = child.getMeasuredHeight() / 2;
+            float scale = 1 - layerIndex * (1 - mScaleFactor);
+            mScaleArray[i] = scale;
+            child.setScaleX(scale);
+            child.setScaleY(scale);
+            float alpha = 1 - layerIndex * (1 - mAlphaFactor);
+            mAlphaArray[i] = alpha;
+            child.setAlpha(alpha);
+            float translationY = half_childHeight * (1 - scale) + mLayerEdgeHeight * layerIndex;
+            mTranslationYArray[i] = translationY;
+            child.setTranslationY(translationY);
+
+            if (i == 0 && mTouchHelper != null) {
+                mTouchHelper.onCoverChanged(child);
+                Log.d(TAG, "adjustChildren: onCoverChanged");
             }
-            int layerIndex = 0;
-            mScaleArray = new float[cnt];
-            mAlphaArray = new float[cnt];
-            mTranslationYArray = new float[cnt];
-            mScaleArray[0] = 1;
-            mAlphaArray[0] = 1;
-            mTranslationYArray[0] = 0;
-            for (int i = 0; i < cnt; i++) {
-                View child = getChildAt(i);
-                if (i == 0 && mTouchHelper != null) {
-                    mTouchHelper.onCoverChanged(child);
-                }
-                int half_childHeight = child.getMeasuredHeight() / 2;
-                if (layerIndex > 0) {
-                    float scale = 1 - layerIndex * (1 - mScaleFactor);
-                    mScaleArray[i] = scale;
-                    child.setScaleX(scale);
-                    child.setScaleY(scale);
-                    float alpha = 1 - layerIndex * (1 - mAlphaFactor);
-                    mAlphaArray[i] = alpha;
-                    child.setAlpha(alpha);
-                    float translationY = half_childHeight * (1 - scale) + mLayerEdgeHeight * layerIndex;
-                    mTranslationYArray[i] = translationY;
-                    child.setTranslationY(translationY);
-                }
-                if (layerIndex < mMaxVisibleCnt - 1) {
-                    layerIndex++;
-                }
+            if (layerIndex < mMaxVisibleCnt - 1) {
+                layerIndex++;
             }
         }
     }
@@ -332,7 +335,7 @@ public class StackCardsView extends FrameLayout {
             removeAllViewsInLayout();
         } else {
             removeAllViewsInLayout();
-            cnt = Math.min(cnt, mMaxVisibleCnt + 1);
+            cnt = Math.min(cnt, mLayerCnt);
             for (int i = 0; i < cnt; i++) {
                 addViewInLayout(mAdapter.getView(i, null, this), -1, getDefaultLayoutParams(), false);
             }
@@ -374,6 +377,22 @@ public class StackCardsView extends FrameLayout {
         @Override
         public void onItemRemoved(int position) {
             super.onItemRemoved(position);
+            Log.d(TAG, "onItemRemoved: position=" + position);
+            View cover = getChildAt(position);
+            removeViewInLayout(cover);
+            appendLayer();
+            mNeedAdjustChild = true;
+            requestLayout();
+        }
+    }
+
+    private void appendLayer() {
+        int childCnt = getChildCount();
+        Log.d(TAG, "appendLayer: childCnt=" + childCnt + ",mAdapter.getCount()=" + mAdapter.getCount());
+        if (mAdapter.getCount() > childCnt) {
+            Log.d(TAG, "appendLayer: addViewInLayout");
+            View appendChild = mAdapter.getView(childCnt, null, this);
+            addViewInLayout(appendChild, -1, getDefaultLayoutParams(), false);
         }
     }
 
