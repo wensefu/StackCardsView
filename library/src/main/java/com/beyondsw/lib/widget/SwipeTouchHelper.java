@@ -33,11 +33,9 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
 
     private static final float SLOPE = 1.732f;
     private StackCardsView mSwipeView;
-    private float mInitDownX;
-    private float mInitDownY;
     private float mLastX;
     private float mLastY;
-    private int mTouchSlop;
+    private int mDragSlop;
     private boolean mIsBeingDragged;
     private boolean mIsDisappearing;
     private View mTouchChild;
@@ -56,7 +54,7 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
     public SwipeTouchHelper(StackCardsView view) {
         mSwipeView = view;
         final ViewConfiguration configuration = ViewConfiguration.get(view.getContext());
-        mTouchSlop = configuration.getScaledTouchSlop();
+        mDragSlop = (int) (configuration.getScaledTouchSlop() / mSwipeView.getDragSensitivity());
         updateCoverInfo(null);
         mSpringSystem = SpringSystem.create();
     }
@@ -150,7 +148,7 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
         View cover = mSwipeView.getChildAt(0);
         cover.setX(cover.getX() + dx);
         cover.setY(cover.getY() + dy);
-        float rotation = dx / (mTouchSlop * 2) + cover.getRotation();
+        float rotation = dx / (mDragSlop * 2) + cover.getRotation();
         final float maxRotation = mSwipeView.getMaxRotation();
         if (rotation > maxRotation) {
             rotation = maxRotation;
@@ -193,7 +191,7 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
             targetX = mTouchChild.getX() - rect.width();
         }
         final int direction = targetX > 0 ? StackCardsView.SWIPE_RIGHT : StackCardsView.SWIPE_LEFT;
-        ObjectAnimator animator = ObjectAnimator.ofFloat(mTouchChild, "x", targetX).setDuration(200);
+        ObjectAnimator animator = ObjectAnimator.ofFloat(mTouchChild, "x", targetX).setDuration(500);
         animator.addListener(new AnimatorListenerAdapter() {
 
             @Override
@@ -234,6 +232,13 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
         }
     }
 
+    private void cancelSpringIfNeeded() {
+        if (mSpring != null && !mSpring.isAtRest()) {
+            mSpring.setAtRest();
+            mSpring.removeAllListeners();
+        }
+    }
+
     @Override
     public boolean onInterceptTouchEvent(MotionEvent ev) {
         if (mTouchChild == null) {
@@ -264,20 +269,17 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
                     return false;
                 }
                 requestParentDisallowInterceptTouchEvent(true);
-                mInitDownX = x;
-                mInitDownY = y;
+                mLastX = x;
+                mLastY = y;
                 break;
             case MotionEvent.ACTION_MOVE:
                 log(TAG, "onInterceptTouchEvent: ACTION_MOVE");
-                float dx = x - mInitDownX;
-                float dy = y - mInitDownY;
-                if (Math.sqrt(dx * dx + dy * dy) > mTouchSlop && canDrag(dx, dy)) {
+                float dx = x - mLastX;
+                float dy = y - mLastY;
+                if (Math.sqrt(dx * dx + dy * dy) > mDragSlop && canDrag(dx, dy)) {
                     log(TAG, "onInterceptTouchEvent: mIsBeingDragged = true");
+                    cancelSpringIfNeeded();
                     mIsBeingDragged = true;
-                    if (mSpring != null && !mSpring.isAtRest()) {
-                        mSpring.setAtRest();
-                        mSpring.removeAllListeners();
-                    }
                 }
                 mLastX = x;
                 mLastY = y;
@@ -299,27 +301,16 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
         float y = ev.getY();
         switch (action) {
             case MotionEvent.ACTION_DOWN:
-                log(TAG, "onTouchEvent: ACTION_DOWN");
-                if (mSwipeView.getSwipeDirection() == 0) {
-                    return false;
-                }
-                if (mTouchChild == null) {
-                    log(TAG, "onTouchEvent: ACTION_DOWN,mTouchChild == null");
-                    return false;
-                }
-                mIsBeingDragged = true;
-                mLastX = x;
-                mLastY = y;
+                log(TAG, "onTouchEvent: ACTION_DOWN,mIsBeingDragged=" + mIsBeingDragged + ",x=" + x);
                 break;
             case MotionEvent.ACTION_MOVE:
                 log(TAG, "onTouchEvent: ACTION_MOVE,mIsBeingDragged=" + mIsBeingDragged);
-                float dx = x - mLastX;
-                float dy = y - mLastY;
-                if (mIsBeingDragged && !mIsDisappearing) {
-                    performDrag(dx, dy);
-                } else {
-                    Log.e(TAG, "onTouchEvent: ACTION_MOVE,mIsBeingDragged=false");
+                //子view未消费down事件时，mIsBeingDragged可能为false
+                if (!mIsBeingDragged) {
+                    cancelSpringIfNeeded();
+                    mIsBeingDragged = true;
                 }
+                performDrag(x - mLastX, y - mLastY);
                 mLastX = x;
                 mLastY = y;
                 break;

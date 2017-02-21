@@ -84,6 +84,9 @@ public class StackCardsView extends FrameLayout {
     private static final float DISMISS_ALPHA = 0.3f;
     private float mDismissAlpha = DISMISS_ALPHA;
 
+    private static final float DRAG_SENSITIVITY = 1f;
+    private float mDragSensitivity = DRAG_SENSITIVITY;
+
     //滑动时的最大旋转角度
     private float mMaxRotation = 8;
 
@@ -187,6 +190,10 @@ public class StackCardsView extends FrameLayout {
 
     float getMaxRotation() {
         return mMaxRotation;
+    }
+
+    float getDragSensitivity(){
+        return mDragSensitivity;
     }
 
     public int getDismissDistance() {

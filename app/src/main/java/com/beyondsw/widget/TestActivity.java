@@ -231,6 +231,7 @@ public class TestActivity extends AppCompatActivity {
                     return View.inflate(TestActivity.this, R.layout.child_item2, null);
                 }
                 view = View.inflate(TestActivity.this, R.layout.item, null);
+                view.setTag(position);
                 view.setOnClickListener(this);
                 MyImageView img = (MyImageView) view.findViewById(R.id.img);
                 img.setPos(position);
@@ -249,7 +250,8 @@ public class TestActivity extends AppCompatActivity {
 
         @Override
         public void onClick(View v) {
-            Log.d("SwipeTouchHelper", "item onClick");
+            Integer pos = (Integer) v.getTag();
+            Log.d("SwipeTouchHelper", "item onClick,pos=" + pos);
         }
 
         private void remove(int pos) {
