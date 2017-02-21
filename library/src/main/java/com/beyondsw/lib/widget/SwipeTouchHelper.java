@@ -74,7 +74,7 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
         @Override
         public void onSpringAtRest(Spring spring) {
             super.onSpringAtRest(spring);
-            Log.d(TAG, "onSpringAtRest: ");
+            log(TAG, "onSpringAtRest: ");
             mSwipeView.onCoverStatusChanged(isCoverIdle());
         }
     };
@@ -87,10 +87,9 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
         }
         mTouchChild = cover;
         if (mTouchChild != null) {
-            mChildInitX = mTouchChild.getX();
-            mChildInitY = mTouchChild.getY();
-            mChildInitRotation = mTouchChild.getRotation();
-            Log.d(TAG, "updateCoverInfo: mChildInitX=" + mChildInitX + ",mChildInitY=" + mChildInitY);
+            mChildInitX = 0;//mTouchChild.getX();
+            mChildInitY = 0;//mTouchChild.getY();
+            mChildInitRotation = 0;//mTouchChild.getRotation();
         }
     }
 
@@ -100,11 +99,12 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
             return true;
         }
         boolean springIdle = mSpring == null || mSpring.isAtRest();
-        return springIdle && !mIsBeingDragged;
+        return springIdle && !mIsBeingDragged && !mIsDisappearing;
     }
 
     @Override
     public void onCoverChanged(View cover) {
+        log(TAG, "onCoverChanged: ");
         updateCoverInfo(cover);
     }
 
@@ -123,7 +123,7 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
     }
 
     private boolean canDrag(float dx, float dy) {
-        Log.d(TAG, "canDrag: dx=" + dx + ",dy=" + dy);
+        log(TAG, "canDrag: dx=" + dx + ",dy=" + dy);
         int direction = mSwipeView.getSwipeDirection();
         if (direction == StackCardsView.SWIPE_ALL) {
             return true;
@@ -178,10 +178,12 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
     }
 
     private void animateToDisappear() {
+        log(TAG, "animateToDisappear: ");
         if (mTouchChild == null) {
             return;
         }
         mIsDisappearing = true;
+        mIsBeingDragged = false;
         Rect rect = new Rect();
         mTouchChild.getGlobalVisibleRect(rect);
         float targetX;
@@ -198,9 +200,10 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
             public void onAnimationEnd(Animator animation) {
                 super.onAnimationEnd(animation);
                 mSwipeView.onCardDismissed(direction);
-                mSwipeView.onCoverStatusChanged(isCoverIdle());
                 mIsDisappearing = false;
+                mSwipeView.onCoverStatusChanged(isCoverIdle());
                 mSwipeView.adjustChildren();
+                log(TAG, "onAnimationEnd: ");
             }
 
             @Override
@@ -234,27 +237,30 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
     @Override
     public boolean onInterceptTouchEvent(MotionEvent ev) {
         if (mTouchChild == null) {
+            Log.d(TAG, "onInterceptTouchEvent: mTouchChild == null");
             return false;
         }
         final int action = ev.getAction() & MotionEvent.ACTION_MASK;
         if (action == MotionEvent.ACTION_CANCEL || action == MotionEvent.ACTION_UP) {
-            Log.d(TAG, "onInterceptTouchEvent: action=" + action + ",reset touch");
+            log(TAG, "onInterceptTouchEvent: action=" + action + ",reset touch");
             mIsBeingDragged = false;
             return false;
         }
         if (mIsBeingDragged && action != MotionEvent.ACTION_DOWN) {
+            Log.d(TAG, "onInterceptTouchEvent: mIsBeingDragged,not down event,return true");
             return true;
         }
         if (mIsDisappearing) {
+            Log.d(TAG, "onInterceptTouchEvent: mIsDisappearing,not down event,return false");
             return false;
         }
         final float x = ev.getX();
         final float y = ev.getY();
         switch (action) {
             case MotionEvent.ACTION_DOWN:
-                Log.d(TAG, "onInterceptTouchEvent: ACTION_DOWN,x=" + x);
+                log(TAG, "onInterceptTouchEvent: ACTION_DOWN,x=" + x);
                 if (!isTouchOnFirstChild(x, y)) {
-                    Log.d(TAG, "onInterceptTouchEvent: !isTouchOnFirstChild");
+                    log(TAG, "onInterceptTouchEvent: !isTouchOnFirstChild");
                     return false;
                 }
                 requestParentDisallowInterceptTouchEvent(true);
@@ -262,11 +268,11 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
                 mInitDownY = y;
                 break;
             case MotionEvent.ACTION_MOVE:
-                Log.d(TAG, "onInterceptTouchEvent: ACTION_MOVE");
+                log(TAG, "onInterceptTouchEvent: ACTION_MOVE");
                 float dx = x - mInitDownX;
                 float dy = y - mInitDownY;
                 if (Math.sqrt(dx * dx + dy * dy) > mTouchSlop && canDrag(dx, dy)) {
-                    Log.d(TAG, "onInterceptTouchEvent: mIsBeingDragged = true");
+                    log(TAG, "onInterceptTouchEvent: mIsBeingDragged = true");
                     mIsBeingDragged = true;
                     if (mSpring != null && !mSpring.isAtRest()) {
                         mSpring.setAtRest();
@@ -277,10 +283,10 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
                 mLastY = y;
                 break;
             case MotionEvent.ACTION_POINTER_DOWN:
-                Log.d(TAG, "onInterceptTouchEvent: ACTION_POINTER_DOWN");
+                log(TAG, "onInterceptTouchEvent: ACTION_POINTER_DOWN");
                 break;
             case MotionEvent.ACTION_POINTER_UP:
-                Log.d(TAG, "onInterceptTouchEvent: ACTION_POINTER_UP");
+                log(TAG, "onInterceptTouchEvent: ACTION_POINTER_UP");
                 break;
         }
         return mIsBeingDragged;
@@ -293,8 +299,12 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
         float y = ev.getY();
         switch (action) {
             case MotionEvent.ACTION_DOWN:
-                Log.d(TAG, "onTouchEvent: ACTION_DOWN");
+                log(TAG, "onTouchEvent: ACTION_DOWN");
                 if (mSwipeView.getSwipeDirection() == 0) {
+                    return false;
+                }
+                if (mTouchChild == null) {
+                    log(TAG, "onTouchEvent: ACTION_DOWN,mTouchChild == null");
                     return false;
                 }
                 mIsBeingDragged = true;
@@ -302,7 +312,7 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
                 mLastY = y;
                 break;
             case MotionEvent.ACTION_MOVE:
-                Log.d(TAG, "onTouchEvent: ACTION_MOVE,mIsBeingDragged=" + mIsBeingDragged);
+                log(TAG, "onTouchEvent: ACTION_MOVE,mIsBeingDragged=" + mIsBeingDragged);
                 float dx = x - mLastX;
                 float dy = y - mLastY;
                 if (mIsBeingDragged && !mIsDisappearing) {
@@ -314,22 +324,29 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
                 mLastY = y;
                 break;
             case MotionEvent.ACTION_POINTER_DOWN:
-                Log.d(TAG, "onTouchEvent: ACTION_POINTER_DOWN");
+                log(TAG, "onTouchEvent: ACTION_POINTER_DOWN");
                 break;
             case MotionEvent.ACTION_CANCEL:
             case MotionEvent.ACTION_UP:
-                Log.d(TAG, "onTouchEvent: ACTION_UP");
+                log(TAG, "onTouchEvent: ACTION_UP");
                 if (mShouldDisappear) {
                     animateToDisappear();
+                    mShouldDisappear = false;
                 } else {
                     animateToInitPos();
                 }
                 mIsBeingDragged = false;
                 break;
             case MotionEvent.ACTION_POINTER_UP:
-                Log.d(TAG, "onTouchEvent: ACTION_POINTER_UP");
+                log(TAG, "onTouchEvent: ACTION_POINTER_UP");
                 break;
         }
         return true;
+    }
+
+    private static void log(String tag, String msg) {
+        if (StackCardsView.DEBUG) {
+            Log.d(tag,msg);
+        }
     }
 }

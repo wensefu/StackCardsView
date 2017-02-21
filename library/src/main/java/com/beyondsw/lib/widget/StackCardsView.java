@@ -22,6 +22,8 @@ public class StackCardsView extends FrameLayout {
 
     private static final String TAG = "StackCardsView";
 
+    public static boolean DEBUG = true;
+
     /**
      * 左滑
      */
@@ -191,9 +193,14 @@ public class StackCardsView extends FrameLayout {
         return mDismissDistance;
     }
 
+    public void setMaxRotatin(float rotation){
+        mMaxRotation = rotation;
+    }
+
     @Override
     protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
         super.onLayout(changed, left, top, right, bottom);
+        log(TAG, "onLayout: ");
         if (mNeedAdjustChild) {
             mNeedAdjustChild = false;
             adjustChildren();
@@ -228,7 +235,7 @@ public class StackCardsView extends FrameLayout {
 
             if (i == 0 && mTouchHelper != null) {
                 mTouchHelper.onCoverChanged(child);
-                Log.d(TAG, "adjustChildren: onCoverChanged");
+                log(TAG, "adjustChildren: onCoverChanged");
             }
             if (layerIndex < mMaxVisibleCnt - 1) {
                 layerIndex++;
@@ -255,6 +262,14 @@ public class StackCardsView extends FrameLayout {
 
     void onCoverScrolled(float progress) {
         final int cnt = getChildCount();
+        if (mScaleArray == null || mScaleArray.length < cnt) {
+            if (BuildConfig.DEBUG) {
+                throw new RuntimeException("onCoverScrolled: mScaleArray does not match");
+            } else {
+                Log.e(TAG, "onCoverScrolled: mScaleArray does not match");
+                return;
+            }
+        }
         float preScale;
         float preAlpha;
         float preTranslationY;
@@ -333,14 +348,22 @@ public class StackCardsView extends FrameLayout {
         int cnt = mAdapter == null ? 0 : mAdapter.getCount();
         if (cnt == 0) {
             removeAllViewsInLayout();
+            if (mTouchHelper != null) {
+                mTouchHelper.onCoverChanged(null);
+            }
         } else {
             removeAllViewsInLayout();
+            if (mTouchHelper != null) {
+                mTouchHelper.onCoverChanged(null);
+            }
             cnt = Math.min(cnt, mLayerCnt);
             for (int i = 0; i < cnt; i++) {
                 addViewInLayout(mAdapter.getView(i, null, this), -1, getDefaultLayoutParams(), false);
             }
             mNeedAdjustChild = true;
+            log(TAG, "initChildren: mNeedAdjustChild set to true and requestLayout");
             requestLayout();
+            log(TAG, "initChildren: requestLayout was called");
         }
     }
 
@@ -377,29 +400,14 @@ public class StackCardsView extends FrameLayout {
         @Override
         public void onItemRemoved(int position) {
             super.onItemRemoved(position);
-            Log.d(TAG, "onItemRemoved: position=" + position);
-            View cover = getChildAt(position);
-            removeViewInLayout(cover);
-            appendLayer();
-            mNeedAdjustChild = true;
-            requestLayout();
-        }
-    }
-
-    private void appendLayer() {
-        int childCnt = getChildCount();
-        Log.d(TAG, "appendLayer: childCnt=" + childCnt + ",mAdapter.getCount()=" + mAdapter.getCount());
-        if (mAdapter.getCount() > childCnt) {
-            Log.d(TAG, "appendLayer: addViewInLayout");
-            View appendChild = mAdapter.getView(childCnt, null, this);
-            addViewInLayout(appendChild, -1, getDefaultLayoutParams(), false);
+            log(TAG, "onItemRemoved: position=" + position);
         }
     }
 
     @Override
     public boolean dispatchTouchEvent(MotionEvent ev) {
         final int action = ev.getAction() & MotionEvent.ACTION_MASK;
-        Log.d("SwipeTouchHelper", "dispatchTouchEvent: action=" + action);
+        log("SwipeTouchHelper", "dispatchTouchEvent: action=" + action);
         return super.dispatchTouchEvent(ev);
     }
 
@@ -478,6 +486,12 @@ public class StackCardsView extends FrameLayout {
             for (int i = mObservers.size() - 1; i >= 0; i--) {
                 mObservers.get(i).onItemRemoved(position);
             }
+        }
+    }
+
+    private static void log(String tag, String msg) {
+        if (StackCardsView.DEBUG) {
+            Log.d(tag, msg);
         }
     }
 }
