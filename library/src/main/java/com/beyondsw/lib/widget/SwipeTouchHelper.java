@@ -87,9 +87,9 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
         }
         mTouchChild = cover;
         if (mTouchChild != null) {
-            mChildInitX = 0;//mTouchChild.getX();
-            mChildInitY = 0;//mTouchChild.getY();
-            mChildInitRotation = 0;//mTouchChild.getRotation();
+            mChildInitX = mTouchChild.getX();
+            mChildInitY = mTouchChild.getY();
+            mChildInitRotation = mTouchChild.getRotation();
         }
     }
 
