@@ -48,7 +48,7 @@ public class TestActivity extends AppCompatActivity {
         @Override
         public Object instantiateItem(ViewGroup container, int position) {
             View pageView;
-            if (position == 0) {
+            if (position == 1) {
                 pageView = View.inflate(TestActivity.this, R.layout.page1, null);
                 stackCardsView = (StackCardsView) pageView.findViewById(R.id.cards);
                 stackCardsView.addOnCardSwipedListener(this);
@@ -232,7 +232,7 @@ public class TestActivity extends AppCompatActivity {
                 }
                 view = View.inflate(TestActivity.this, R.layout.item, null);
                 view.setTag(position);
-                view.setOnClickListener(this);
+                //view.setOnClickListener(this);
                 MyImageView img = (MyImageView) view.findViewById(R.id.img);
                 img.setPos(position);
                 TextView textView = (TextView) view.findViewById(R.id.text);
@@ -251,7 +251,7 @@ public class TestActivity extends AppCompatActivity {
         @Override
         public void onClick(View v) {
             Integer pos = (Integer) v.getTag();
-            Log.d("SwipeTouchHelper", "item onClick,pos=" + pos);
+            Log.d("StackCardsView", "item onClick,pos=" + pos);
         }
 
         private void remove(int pos) {

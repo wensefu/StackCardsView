@@ -48,17 +48,17 @@ public class MyViewGroup extends LinearLayout{
         Log.d("lingchao", "MyViewGroup " + name + " onMeasure");
     }
 
-    @Override
-    public boolean onInterceptTouchEvent(MotionEvent ev) {
-        int action = ev.getAction();
-        Log.d("touchtest", "MyViewGroup onInterceptTouchEvent: action=" + action);
-        return false;
-    }
+//    @Override
+//    public boolean onInterceptTouchEvent(MotionEvent ev) {
+//        int action = ev.getAction();
+//        Log.d("StackCardsView-touch", "MyViewGroup onInterceptTouchEvent: action=" + action);
+//        return false;
+//    }
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         int action = event.getAction();
-        Log.d("touchtest", "MyViewGroup onTouchEvent: action="+action);
-        return true;
+        Log.d("StackCardsView-touch", "MyViewGroup onTouchEvent: action="+action);
+        return false;
     }
 }
