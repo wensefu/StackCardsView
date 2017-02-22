@@ -3,12 +3,16 @@ package com.beyondsw.lib.widget;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.ObjectAnimator;
+import android.content.Context;
 import android.graphics.Rect;
 import android.util.Log;
 import android.view.MotionEvent;
+import android.view.VelocityTracker;
 import android.view.View;
 import android.view.ViewConfiguration;
 import android.view.ViewParent;
+import android.view.animation.LinearInterpolator;
+import android.widget.OverScroller;
 
 import com.beyondsw.lib.widget.rebound.SimpleSpringListener;
 import com.beyondsw.lib.widget.rebound.Spring;
@@ -39,6 +43,9 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
     private float mInitDownY;
     private boolean mDownOnFirstChild;
     private int mDragSlop;
+    private int mMaxFlingVelocity;
+    private float mMinFlingVelocity;
+    private VelocityTracker mVelocityTracker;
     private boolean mIsBeingDragged;
     private boolean mIsDisappearing;
     private View mTouchChild;
@@ -53,13 +60,21 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
 
     private SpringSystem mSpringSystem;
     private Spring mSpring;
+    private OverScroller mScroller;
+
+    private static final int MIN_FLING_VELOCITY = 400;
 
     public SwipeTouchHelper(StackCardsView view) {
         mSwipeView = view;
-        final ViewConfiguration configuration = ViewConfiguration.get(view.getContext());
+        final Context context = view.getContext();
+        final ViewConfiguration configuration = ViewConfiguration.get(context);
         mDragSlop = (int) (configuration.getScaledTouchSlop() / mSwipeView.getDragSensitivity());
+        mMaxFlingVelocity = configuration.getScaledMaximumFlingVelocity();
+        float density = context.getResources().getDisplayMetrics().density;
+        mMinFlingVelocity = (int) (MIN_FLING_VELOCITY * density);
         updateCoverInfo(null);
         mSpringSystem = SpringSystem.create();
+        mScroller = new OverScroller(context, new LinearInterpolator());
     }
 
     private SpringListener mSpringListener = new SimpleSpringListener() {
@@ -91,6 +106,8 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
             mChildInitX = mTouchChild.getX();
             mChildInitY = mTouchChild.getY();
             mChildInitRotation = mTouchChild.getRotation();
+
+            Log.d(TAG, "updateCoverInfo: left=" + mTouchChild.getLeft() + ",top=" + mTouchChild.getTop() + ",right=" + mTouchChild.getTop() + ",bottom=" + mTouchChild.getBottom());
         }
     }
 
@@ -242,6 +259,71 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
         }
     }
 
+    private int[] calcScrollDistance(float dx, float dy) {
+        int[] result = new int[2];
+        float edgeDeltaX;
+        float edgeDeltaY;
+        if (dx > 0 && dy < 0) {
+            edgeDeltaX = mSwipeView.getWidth()-mTouchChild.getLeft();
+            edgeDeltaY = mTouchChild.getBottom();
+        } else if (dx > 0 && dy > 0) {
+            edgeDeltaX = mSwipeView.getWidth()-mTouchChild.getLeft();
+            edgeDeltaY = mSwipeView.getHeight() -
+        } else if (dx < 0 && dy < 0) {
+
+        } else if (dx < 0 && dy > 0) {
+
+        }
+        float fdx;
+        float fdy;
+        if (edgeDeltaX * Math.abs(dy) >= edgeDeltaY * Math.abs(dx)) {
+            fdy = -edgeDeltaY;
+            fdx = fdy * dx / dy;
+        } else {
+            fdx = edgeDeltaX;
+            fdy = fdx * dy / dx;
+        }
+        result[0] = (int) fdx;
+        result[1] = (int) fdy;
+        return result;
+    }
+
+    private boolean doFling(float vx, float vy) {
+        if (mTouchChild == null) {
+            return false;
+        }
+        if (Math.abs(vx) < mMinFlingVelocity && Math.abs(vy) < mMinFlingVelocity) {
+            return false;
+        }
+        float dx = mTouchChild.getX() - mChildInitX;
+        float dy = mTouchChild.getY() - mChildInitY;
+        int[] fdxArray = calcScrollDistance(dx,dy);
+        mScroller.startScroll((int) mTouchChild.getX(), (int) mTouchChild.getY(), fdxArray[0], fdxArray[1]);
+        return false;
+    }
+
+    private void clearVelocityTracker() {
+        if (mVelocityTracker != null) {
+            mVelocityTracker.recycle();
+            mVelocityTracker = null;
+        }
+    }
+
+    @Override
+    public void computeScroll() {
+        Log.d(TAG, "computeScroll: ");
+        if (mTouchChild != null) {
+            if (mScroller.computeScrollOffset()) {
+                int x = mScroller.getCurrX();
+                int y = mScroller.getCurrY();
+                Log.d(TAG, "computeScroll: x=" + x + ",y=" + y);
+                mTouchChild.setX(mScroller.getCurrX());
+                mTouchChild.setY(mScroller.getCurrY());
+                mSwipeView.postInvalidate();
+            }
+        }
+    }
+
     @Override
     public boolean onInterceptTouchEvent(MotionEvent ev) {
         if (mTouchChild == null) {
@@ -249,6 +331,13 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
             return false;
         }
         final int action = ev.getAction() & MotionEvent.ACTION_MASK;
+        if (action == MotionEvent.ACTION_DOWN) {
+            Log.d(TAG, "onTouchEvent: down,mVelocityTracker=" + mVelocityTracker);
+            clearVelocityTracker();
+        }
+        if (mVelocityTracker == null) {
+            mVelocityTracker = VelocityTracker.obtain();
+        }
 //        if (action == MotionEvent.ACTION_CANCEL || action == MotionEvent.ACTION_UP) {
 //            log(TAG, "onInterceptTouchEvent: action=" + action + ",reset touch");
 //            mIsBeingDragged = false;
@@ -303,6 +392,13 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
         final int action = ev.getAction() & MotionEvent.ACTION_MASK;
         float x = ev.getX();
         float y = ev.getY();
+        if (action == MotionEvent.ACTION_DOWN) {
+            Log.d(TAG, "onTouchEvent: down,mVelocityTracker=" + mVelocityTracker);
+        }
+        if (mVelocityTracker == null) {
+            mVelocityTracker = VelocityTracker.obtain();
+        }
+        mVelocityTracker.addMovement(ev);
         switch (action) {
             case MotionEvent.ACTION_DOWN:
                 log(TAG, "onTouchEvent: ACTION_DOWN,mIsBeingDragged=" + mIsBeingDragged + ",x=" + x);
@@ -332,7 +428,14 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
                     animateToDisappear();
                     mShouldDisappear = false;
                 } else {
-                    animateToInitPos();
+                    final VelocityTracker velocityTracker = mVelocityTracker;
+                    velocityTracker.computeCurrentVelocity(1000, mMaxFlingVelocity);
+                    float xv = mVelocityTracker.getXVelocity();
+                    float yv = mVelocityTracker.getYVelocity();
+                    Log.d(TAG, "onTouchEvent: ACTION_UP,xv=" + xv + ",yv=" + yv + ",mMaxFlingVelocity=" + mMaxFlingVelocity + ",mMinFlingVelocity=" + mMinFlingVelocity);
+                    if (!doFling(xv, yv)) {
+                        animateToInitPos();
+                    }
                 }
                 mIsBeingDragged = false;
                 break;
@@ -345,7 +448,7 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
 
     private static void log(String tag, String msg) {
         if (StackCardsView.DEBUG) {
-            Log.d(tag,msg);
+            Log.d(tag, msg);
         }
     }
 }

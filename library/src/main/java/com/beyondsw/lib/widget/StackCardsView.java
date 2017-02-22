@@ -205,6 +205,14 @@ public class StackCardsView extends FrameLayout {
     }
 
     @Override
+    public void computeScroll() {
+        Log.d(TAG, "computeScroll: mTouchHelper=" + mTouchHelper);
+        if (mTouchHelper != null) {
+            mTouchHelper.computeScroll();
+        }
+    }
+
+    @Override
     protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
         super.onLayout(changed, left, top, right, bottom);
         log(TAG, "onLayout: ");
