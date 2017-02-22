@@ -5,13 +5,15 @@ import android.animation.AnimatorListenerAdapter;
 import android.animation.ObjectAnimator;
 import android.content.Context;
 import android.graphics.Rect;
+import android.os.Handler;
+import android.os.Message;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.VelocityTracker;
 import android.view.View;
 import android.view.ViewConfiguration;
 import android.view.ViewParent;
-import android.view.animation.LinearInterpolator;
+import android.view.animation.DecelerateInterpolator;
 import android.widget.OverScroller;
 
 import com.beyondsw.lib.widget.rebound.SimpleSpringListener;
@@ -24,7 +26,7 @@ import com.beyondsw.lib.widget.rebound.SpringSystem;
 /**
  * Created by wensefu on 17-2-12.
  */
-public class SwipeTouchHelper implements ISwipeTouchHelper {
+public class SwipeTouchHelper implements ISwipeTouchHelper ,Handler.Callback{
 
     //// TODO: 2017/2/14
     //1,速度大于一定值时卡片滑出消失
@@ -64,6 +66,9 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
 
     private static final int MIN_FLING_VELOCITY = 400;
 
+    private Handler mHandler;
+    private static final int MSG_DO_DISAPPEAR_SCROLL = 1;
+
     public SwipeTouchHelper(StackCardsView view) {
         mSwipeView = view;
         final Context context = view.getContext();
@@ -74,8 +79,10 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
         mMinFlingVelocity = (int) (MIN_FLING_VELOCITY * density);
         updateCoverInfo(null);
         mSpringSystem = SpringSystem.create();
-        mScroller = new OverScroller(context, new LinearInterpolator());
+        mScroller = new OverScroller(context, new DecelerateInterpolator());
+        mHandler = new Handler(this);
     }
+
 
     private SpringListener mSpringListener = new SimpleSpringListener() {
         @Override
@@ -124,6 +131,7 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
     public void onCoverChanged(View cover) {
         log(TAG, "onCoverChanged: ");
         updateCoverInfo(cover);
+        mSwipeView.invalidate();
     }
 
     private void requestParentDisallowInterceptTouchEvent(boolean disallowIntercept) {
@@ -175,6 +183,7 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
         } else if (rotation < -maxRotation) {
             rotation = -maxRotation;
         }
+        Log.d(TAG, "performDrag: setRotation->" + rotation);
         cover.setRotation(rotation);
         onCoverScrolled();
     }
@@ -211,7 +220,7 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
             targetX = mTouchChild.getX() - rect.width();
         }
         final int direction = targetX > 0 ? StackCardsView.SWIPE_RIGHT : StackCardsView.SWIPE_LEFT;
-        ObjectAnimator animator = ObjectAnimator.ofFloat(mTouchChild, "x", targetX).setDuration(500);
+        ObjectAnimator animator = ObjectAnimator.ofFloat(mTouchChild, "x", targetX).setDuration(180);
         animator.addListener(new AnimatorListenerAdapter() {
 
             @Override
@@ -261,30 +270,29 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
 
     private int[] calcScrollDistance(float dx, float dy) {
         int[] result = new int[2];
-        float edgeDeltaX;
-        float edgeDeltaY;
-        if (dx > 0 && dy < 0) {
-            edgeDeltaX = mSwipeView.getWidth()-mTouchChild.getLeft();
-            edgeDeltaY = mTouchChild.getBottom();
-        } else if (dx > 0 && dy > 0) {
-            edgeDeltaX = mSwipeView.getWidth()-mTouchChild.getLeft();
-            edgeDeltaY = mSwipeView.getHeight() -
-        } else if (dx < 0 && dy < 0) {
-
-        } else if (dx < 0 && dy > 0) {
-
+        float edgeDeltaX = 0;
+        float edgeDeltaY = 0;
+        if (dx > 0) {
+            edgeDeltaX = mSwipeView.getWidth() - mTouchChild.getX();
+        } else if (dx < 0) {
+            edgeDeltaX = mTouchChild.getX() + mTouchChild.getWidth();
         }
-        float fdx;
-        float fdy;
+        if (dy > 0) {
+            edgeDeltaY = mSwipeView.getHeight() - mTouchChild.getY();
+        } else if (dy < 0) {
+            edgeDeltaY = mTouchChild.getHeight() + mTouchChild.getY();
+        }
+        float scrollDx;
+        float scrollDy;
         if (edgeDeltaX * Math.abs(dy) >= edgeDeltaY * Math.abs(dx)) {
-            fdy = -edgeDeltaY;
-            fdx = fdy * dx / dy;
+            scrollDy = dy > 0 ? edgeDeltaY : -edgeDeltaY;
+            scrollDx = scrollDy * dx / dy;
         } else {
-            fdx = edgeDeltaX;
-            fdy = fdx * dy / dx;
+            scrollDx = dx > 0 ? edgeDeltaX : -edgeDeltaX;
+            scrollDy = scrollDx * dy / dx;
         }
-        result[0] = (int) fdx;
-        result[1] = (int) fdy;
+        result[0] = (int) scrollDx;
+        result[1] = (int) scrollDy;
         return result;
     }
 
@@ -295,11 +303,13 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
         if (Math.abs(vx) < mMinFlingVelocity && Math.abs(vy) < mMinFlingVelocity) {
             return false;
         }
+        mIsDisappearing = true;
         float dx = mTouchChild.getX() - mChildInitX;
         float dy = mTouchChild.getY() - mChildInitY;
         int[] fdxArray = calcScrollDistance(dx,dy);
-        mScroller.startScroll((int) mTouchChild.getX(), (int) mTouchChild.getY(), fdxArray[0], fdxArray[1]);
-        return false;
+        mScroller.startScroll((int) mTouchChild.getX(), (int) mTouchChild.getY(), fdxArray[0], fdxArray[1],200);
+        mHandler.obtainMessage(MSG_DO_DISAPPEAR_SCROLL).sendToTarget();
+        return true;
     }
 
     private void clearVelocityTracker() {
@@ -310,18 +320,31 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
     }
 
     @Override
-    public void computeScroll() {
-        Log.d(TAG, "computeScroll: ");
-        if (mTouchChild != null) {
+    public boolean handleMessage(Message msg) {
+        if (msg.what == MSG_DO_DISAPPEAR_SCROLL) {
             if (mScroller.computeScrollOffset()) {
                 int x = mScroller.getCurrX();
                 int y = mScroller.getCurrY();
-                Log.d(TAG, "computeScroll: x=" + x + ",y=" + y);
+                Log.d(TAG, "MSG_DO_DISAPPEAR_SCROLL: x=" + x + ",y=" + y);
                 mTouchChild.setX(mScroller.getCurrX());
                 mTouchChild.setY(mScroller.getCurrY());
-                mSwipeView.postInvalidate();
+                onCoverScrolled();
+                Message m = mHandler.obtainMessage(MSG_DO_DISAPPEAR_SCROLL);
+                mHandler.sendMessageDelayed(m, 30);
+            }else{
+                mSwipeView.onCardDismissed(0); //// TODO: 17-2-23
+                mIsDisappearing = false;
+                mSwipeView.onCoverStatusChanged(isCoverIdle());
+                mSwipeView.adjustChildren();
+                log(TAG, "do fling done ");
             }
         }
+        return true;
+    }
+
+    @Override
+    public void computeScroll() {
+        Log.d(TAG, "computeScroll: ");
     }
 
     @Override

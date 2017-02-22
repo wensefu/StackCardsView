@@ -28,7 +28,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if(v==view1){
             Log.d("lingchao", "onClick: ");
         }else{
-            view1.forceLayout();
+            view1.offsetTopAndBottom(5);
         }
 
     }

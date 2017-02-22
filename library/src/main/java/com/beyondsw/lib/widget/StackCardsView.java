@@ -2,6 +2,9 @@ package com.beyondsw.lib.widget;
 
 import android.content.Context;
 import android.database.Observable;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.Gravity;
@@ -88,7 +91,7 @@ public class StackCardsView extends FrameLayout {
     private float mDragSensitivity = DRAG_SENSITIVITY;
 
     //滑动时的最大旋转角度
-    private float mMaxRotation = 8;
+    private float mMaxRotation = 45;
 
     private float[] mScaleArray;
     private float[] mAlphaArray;
@@ -101,6 +104,9 @@ public class StackCardsView extends FrameLayout {
     private boolean mNeedAdjustChild;
     private Runnable mPendingTask;
 
+    Paint paint = new Paint();
+    Paint paint2 = new Paint();
+
     public StackCardsView(Context context) {
         this(context, null);
     }
@@ -108,6 +114,12 @@ public class StackCardsView extends FrameLayout {
     public StackCardsView(Context context, AttributeSet attrs) {
         super(context, attrs);
         setChildrenDrawingOrderEnabled(true);
+
+        paint.setColor(Color.RED);
+        paint.setStrokeWidth(4);
+
+        paint2.setColor(Color.YELLOW);
+        paint2.setStrokeWidth(10);
     }
 
     public interface OnCardSwipedListener {
@@ -275,7 +287,27 @@ public class StackCardsView extends FrameLayout {
         }
     }
 
+    @Override
+    protected void dispatchDraw(Canvas canvas) {
+        super.dispatchDraw(canvas);
+        Log.d(TAG, "dispatchDraw: ");
+        if (getChildCount() > 0) {
+            View cover = getChildAt(0);
+            Log.d(TAG, "dispatchDraw: cover.x="+cover.getX());
+            Log.d(TAG, "dispatchDraw: cover.y="+cover.getY());
+            Log.d(TAG, "dispatchDraw: cover.left="+cover.getLeft());
+            Log.d(TAG, "dispatchDraw: cover.top="+cover.getTop());
+            Log.d(TAG, "dispatchDraw: cover.right="+cover.getRight());
+            Log.d(TAG, "dispatchDraw: cover.bottom="+cover.getBottom());
+            canvas.drawLine(0, cover.getY(), getWidth(), cover.getY(), paint);
+            canvas.drawLine(cover.getX(), 0, cover.getX(), getHeight(), paint);
+            canvas.drawLine(0, cover.getY() + cover.getHeight(), getWidth(), cover.getY() + cover.getHeight(), paint);
+            canvas.drawLine(cover.getX() + cover.getWidth(), 0, cover.getX() + cover.getWidth(), getHeight(), paint);
+        }
+    }
+
     void onCoverScrolled(float progress) {
+        invalidate();
         final int cnt = getChildCount();
         if (mScaleArray == null || mScaleArray.length < cnt) {
             if (BuildConfig.DEBUG) {
