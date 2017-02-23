@@ -118,8 +118,8 @@ public class StackCardsView extends FrameLayout {
 
         if (DEBUG) {
             paint = new Paint();
-            paint.setColor(Color.RED);
-            paint.setStrokeWidth(4);
+            paint.setColor(Color.GREEN);
+            paint.setStrokeWidth(10);
         }
     }
 
@@ -321,15 +321,15 @@ public class StackCardsView extends FrameLayout {
     @Override
     protected void dispatchDraw(Canvas canvas) {
         super.dispatchDraw(canvas);
-        if (DEBUG) {
-            if (getChildCount() > 0) {
-                View cover = getChildAt(0);
-                canvas.drawLine(0, cover.getY(), getWidth(), cover.getY(), paint);
-                canvas.drawLine(cover.getX(), 0, cover.getX(), getHeight(), paint);
-                canvas.drawLine(0, cover.getY() + cover.getHeight(), getWidth(), cover.getY() + cover.getHeight(), paint);
-                canvas.drawLine(cover.getX() + cover.getWidth(), 0, cover.getX() + cover.getWidth(), getHeight(), paint);
-            }
-        }
+//        if (DEBUG) {
+//            if (getChildCount() > 0) {
+//                View cover = getChildAt(0);
+//                canvas.drawLine(0, cover.getY(), getWidth(), cover.getY(), paint);
+//                canvas.drawLine(cover.getX(), 0, cover.getX(), getHeight(), paint);
+//                canvas.drawLine(0, cover.getY() + cover.getHeight(), getWidth(), cover.getY() + cover.getHeight(), paint);
+//                canvas.drawLine(cover.getX() + cover.getWidth(), 0, cover.getX() + cover.getWidth(), getHeight(), paint);
+//            }
+//        }
     }
 
     void onCoverScrolled(float progress) {

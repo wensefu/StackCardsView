@@ -167,6 +167,9 @@ public class SwipeTouchHelper implements ISwipeTouchHelper, Handler.Callback {
     }
 
     private boolean isDistanceAllowDismiss() {
+        if (mTouchChild == null) {
+            return false;
+        }
         float dx = mTouchChild.getX() - mChildInitX;
         float dy = mTouchChild.getY() - mChildInitY;
         double distance = Math.sqrt(dx * dx + dy * dy);
@@ -226,13 +229,14 @@ public class SwipeTouchHelper implements ISwipeTouchHelper, Handler.Callback {
         }
         mTouchChild.setX(mTouchChild.getX() + dx);
         mTouchChild.setY(mTouchChild.getY() + dy);
-        float rotation = dx / (mDragSlop * 2) + mTouchChild.getRotation();
         final float maxRotation = mSwipeView.getMaxRotation();
+        float rotation = maxRotation * (mTouchChild.getX() - mChildInitX) / mSwipeView.getDismissDistance();
         if (rotation > maxRotation) {
             rotation = maxRotation;
         } else if (rotation < -maxRotation) {
             rotation = -maxRotation;
         }
+        mSwipeView.getMaxRotation();
         mTouchChild.setRotation(rotation);
         onCoverScrolled();
     }
@@ -265,23 +269,29 @@ public class SwipeTouchHelper implements ISwipeTouchHelper, Handler.Callback {
         String property;
         float target;
         int dir;
-        //// TODO: 2017/2/23  这里的target计算有点问题，有旋转角度时target实际要大一些
+        float extraX = 0;
+        float extraY = 0;
+        if (mTouchChild.getRotation() > 0) {
+            float[] extra = calcExtraSize();
+            extraX = extra[0];
+            extraY = extra[1];
+        }
         if (Math.abs(dx) * SLOPE > Math.abs(dy)) {
             property = "x";
             if (dx > 0) {
-                target = mSwipeView.getWidth();
+                target = mSwipeView.getWidth() + extraX;
                 dir = StackCardsView.SWIPE_RIGHT;
-            } else{
-                target = -mTouchChild.getWidth();
+            } else {
+                target = -mTouchChild.getWidth() - extraX;
                 dir = StackCardsView.SWIPE_LEFT;
             }
         } else {
             property = "y";
             if (dy > 0) {
-                target = mSwipeView.getHeight();
+                target = mSwipeView.getHeight() + extraY;
                 dir = StackCardsView.SWIPE_DOWN;
             } else {
-                target = -mTouchChild.getHeight();
+                target = -mTouchChild.getHeight() - extraY;
                 dir = StackCardsView.SWIPE_UP;
             }
         }
@@ -330,11 +340,27 @@ public class SwipeTouchHelper implements ISwipeTouchHelper, Handler.Callback {
         }
     }
 
+    /**
+     * 这里取由于角度变换导致的超过view原本矩形范围的最大size
+     *
+     * @return
+     */
+    private float[] calcExtraSize() {
+        float[] result = new float[2];
+        int childWidth = mTouchChild.getWidth();
+        int childHeight = mTouchChild.getHeight();
+
+        //对角线长度的一半
+        double d1 = Math.sqrt(childWidth * childWidth + childHeight * childHeight);
+        result[0] = (float) (d1 - childWidth) / 2;
+        result[1] = (float) (d1 - childHeight) / 2;
+        return result;
+    }
+
     private int[] calcScrollDistance(float vx, float vy, float dx, float dy) {
         int[] result = new int[2];
         float edgeDeltaX = 0;
         float edgeDeltaY = 0;
-        //// TODO: 2017/2/23  这里的target计算有点问题，有旋转角度时target实际要大一些
         if (vx > 0) {
             edgeDeltaX = mSwipeView.getWidth() - mTouchChild.getX();
         } else if (vx < 0) {
@@ -347,14 +373,21 @@ public class SwipeTouchHelper implements ISwipeTouchHelper, Handler.Callback {
         }
         float scrollDx;
         float scrollDy;
+        float extraX = 0;
+        float extraY = 0;
+        if (mTouchChild.getRotation() != 0) {
+            float[] extra = calcExtraSize();
+            extraX = extra[0];
+            extraY = extra[1];
+        }
         if (edgeDeltaX * Math.abs(dy) >= edgeDeltaY * Math.abs(dx)) {
-            scrollDy = vy > 0 ? edgeDeltaY : -edgeDeltaY;
+            scrollDy = vy > 0 ? (edgeDeltaY + extraY) : (-edgeDeltaY - extraY);
             float value = Math.abs(scrollDy * dx / dy);
-            scrollDx = vx > 0 ? value : -value;
+            scrollDx = vx > 0 ? (value + extraX) : (-value - extraX);
         } else {
-            scrollDx = vx > 0 ? edgeDeltaX : -edgeDeltaX;
+            scrollDx = vx > 0 ? (edgeDeltaX + extraX) : (-edgeDeltaX - extraX);
             float value = Math.abs(scrollDx * dy / dx);
-            scrollDy = vy > 0 ? value : -value;
+            scrollDy = vy > 0 ? (value + extraY) : (-value - extraY);
         }
         result[0] = (int) scrollDx;
         result[1] = (int) scrollDy;
@@ -373,7 +406,7 @@ public class SwipeTouchHelper implements ISwipeTouchHelper, Handler.Callback {
         float dy = mTouchChild.getY() - mChildInitY;
         log(TAG, "doFling,vx=" + vx + ",vy=" + vy + ",dx=" + dx + ",dy=" + dy);
         int[] fdxArray = calcScrollDistance(vx, vy, dx, dy);
-        mScroller.startScroll((int) mTouchChild.getX(), (int) mTouchChild.getY(), fdxArray[0], fdxArray[1], 200);
+        mScroller.startScroll((int) mTouchChild.getX(), (int) mTouchChild.getY(), fdxArray[0], fdxArray[1],300);
         mHandler.obtainMessage(MSG_DO_DISAPPEAR_SCROLL).sendToTarget();
         return true;
     }
@@ -393,7 +426,7 @@ public class SwipeTouchHelper implements ISwipeTouchHelper, Handler.Callback {
                 mTouchChild.setY(mScroller.getCurrY());
                 onCoverScrolled();
                 Message m = mHandler.obtainMessage(MSG_DO_DISAPPEAR_SCROLL);
-                mHandler.sendMessageDelayed(m, 30);
+                mHandler.sendMessageDelayed(m, 15);
             } else {
                 mSwipeView.onCardDismissed(0); //// TODO: 17-2-23
                 mIsDisappearing = false;
