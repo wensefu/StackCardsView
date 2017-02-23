@@ -53,6 +53,7 @@ public class StackCardsView extends FrameLayout {
     public static final int SWIPE_ALL = SWIPE_LEFT | SWIPE_RIGHT | SWIPE_UP | SWIPE_DOWN;
 
     private int mSwipeDirection = SWIPE_ALL;
+    private int mDismissDirection = SWIPE_ALL;
 
     private Adapter mAdapter;
 
@@ -80,7 +81,7 @@ public class StackCardsView extends FrameLayout {
     private static final float ALPHA_FACTOR = 0.6f;
     private float mAlphaFactor = ALPHA_FACTOR;
 
-    private static final int SWIPE_TO_DISMISS_DISTINCE = 500;
+    private static final int SWIPE_TO_DISMISS_DISTINCE = 400;
     private int mDismissDistance = SWIPE_TO_DISMISS_DISTINCE;
 
     //卡片消失时的透明度
@@ -91,8 +92,8 @@ public class StackCardsView extends FrameLayout {
     private float mDragSensitivity = DRAG_SENSITIVITY;
 
     //滑动时的最大旋转角度
-    private float mMaxRotation = 45;
-    private boolean mFastSwipeAllowed = true;
+    private float mMaxRotation = 8;
+    private boolean mFastSwipeAllowed = false;
 
     private float[] mScaleArray;
     private float[] mAlphaArray;
@@ -168,6 +169,39 @@ public class StackCardsView extends FrameLayout {
     }
 
     /**
+     * 设置可以滑动消失的方向,支持以下值:<br/>
+     * {@link #SWIPE_ALL},<br/>
+     * {@link #SWIPE_LEFT},<br/>
+     * {@link #SWIPE_RIGHT},<br/>
+     * {@link #SWIPE_UP},<br/>
+     * {@link #SWIPE_DOWN},<br/>
+     *
+     * @param direction 方向
+     */
+    public void addDismissDirection(int direction) {
+        mDismissDirection |= direction;
+    }
+
+    /**
+     * 设置某个方向不可以滑动消失,支持以下值:<br/>
+     * <p>
+     * {@link #SWIPE_ALL},<br/>
+     * {@link #SWIPE_LEFT},<br/>
+     * {@link #SWIPE_RIGHT},<br/>
+     * {@link #SWIPE_UP},<br/>
+     * {@link #SWIPE_DOWN},<br/>
+     *
+     * @param direction 方向
+     */
+    public void removeDismissDirection(int direction) {
+        mDismissDirection &= ~direction;
+    }
+
+    public int getDismissDirection() {
+        return mDismissDirection;
+    }
+
+    /**
      * 设置可以滑动的方向,支持以下值:<br/>
      * {@link #SWIPE_ALL},<br/>
      * {@link #SWIPE_LEFT},<br/>
@@ -223,7 +257,7 @@ public class StackCardsView extends FrameLayout {
     @Override
     protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
         super.onLayout(changed, left, top, right, bottom);
-        log(TAG, "onLayout: ");
+        log(TAG, "onLayout: mNeedAdjustChild=" + mNeedAdjustChild);
         if (mNeedAdjustChild) {
             mNeedAdjustChild = false;
             adjustChildren();
@@ -233,6 +267,7 @@ public class StackCardsView extends FrameLayout {
     void adjustChildren() {
         final int cnt = getChildCount();
         if (cnt == 0) {
+            log(TAG, "adjustChildren: getChildCount=0");
             return;
         }
         int layerIndex = 0;
@@ -287,7 +322,6 @@ public class StackCardsView extends FrameLayout {
     protected void dispatchDraw(Canvas canvas) {
         super.dispatchDraw(canvas);
         if (DEBUG) {
-            log(TAG, "dispatchDraw: ");
             if (getChildCount() > 0) {
                 View cover = getChildAt(0);
                 canvas.drawLine(0, cover.getY(), getWidth(), cover.getY(), paint);
@@ -391,11 +425,13 @@ public class StackCardsView extends FrameLayout {
             removeAllViewsInLayout();
             if (mTouchHelper != null) {
                 mTouchHelper.onCoverChanged(null);
+                log(TAG,"removeAllViewsInLayout onCoverChanged");
             }
         } else {
             removeAllViewsInLayout();
             if (mTouchHelper != null) {
                 mTouchHelper.onCoverChanged(null);
+                log(TAG,"removeAllViewsInLayout2 onCoverChanged");
             }
             cnt = Math.min(cnt, mLayerCnt);
             for (int i = 0; i < cnt; i++) {

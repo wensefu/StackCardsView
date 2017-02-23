@@ -23,11 +23,6 @@ public class DragHelperWrapper implements ISwipeTouchHelper {
     }
 
     @Override
-    public void computeScroll() {
-
-    }
-
-    @Override
     public boolean onTouchEvent(MotionEvent ev) {
         mDragHelper.processTouchEvent(ev);
         return true;

@@ -54,6 +54,7 @@ public class TestActivity extends AppCompatActivity {
                 stackCardsView.addOnCardSwipedListener(this);
                 adapter = new CardAdapter();
                 stackCardsView.setAdapter(adapter);
+//                stackCardsView.removeSwipeDirection(StackCardsView.SWIPE_ALL);
             } else {
                 pageView = View.inflate(TestActivity.this, R.layout.page2, null);
             }
@@ -184,13 +185,6 @@ public class TestActivity extends AppCompatActivity {
             for (int i = 0; i < ImageUrls.images.length; i++) {
                 mImages.add(ImageUrls.images[i]);
             }
-
-            if (hasListView) {
-                stackCardsView.removeSwipeDirection(StackCardsView.SWIPE_UP);
-                stackCardsView.removeSwipeDirection(StackCardsView.SWIPE_DOWN);
-            } else {
-                stackCardsView.addSwipeDirection(StackCardsView.SWIPE_ALL);
-            }
         }
 
         @Override
@@ -215,7 +209,7 @@ public class TestActivity extends AppCompatActivity {
                     });
                 } else {
                     view = View.inflate(TestActivity.this, R.layout.item, null);
-                    //view.setOnClickListener(this);
+                    view.setOnClickListener(this);
                     MyImageView img = (MyImageView) view.findViewById(R.id.img);
                     img.setPos(position);
                     TextView textView = (TextView) view.findViewById(R.id.text);
@@ -232,7 +226,7 @@ public class TestActivity extends AppCompatActivity {
                 }
                 view = View.inflate(TestActivity.this, R.layout.item, null);
                 view.setTag(position);
-                //view.setOnClickListener(this);
+                view.setOnClickListener(this);
                 MyImageView img = (MyImageView) view.findViewById(R.id.img);
                 img.setPos(position);
                 TextView textView = (TextView) view.findViewById(R.id.text);
@@ -263,12 +257,6 @@ public class TestActivity extends AppCompatActivity {
                     mImages.remove(pos);
                     notifyDataSetChanged();
                 }
-            }
-            if (hasListView) {
-                stackCardsView.removeSwipeDirection(StackCardsView.SWIPE_UP);
-                stackCardsView.removeSwipeDirection(StackCardsView.SWIPE_DOWN);
-            } else {
-                stackCardsView.addSwipeDirection(StackCardsView.SWIPE_ALL);
             }
         }
     }
