@@ -93,7 +93,7 @@ public class StackCardsView extends FrameLayout {
 
     //滑动时的最大旋转角度
     private float mMaxRotation = 8;
-    private boolean mFastSwipeAllowed = false;
+    private boolean mFastSwipeAllowed = true;
 
     private float[] mScaleArray;
     private float[] mAlphaArray;

@@ -349,10 +349,12 @@ public class SwipeTouchHelper implements ISwipeTouchHelper, Handler.Callback {
         float scrollDy;
         if (edgeDeltaX * Math.abs(dy) >= edgeDeltaY * Math.abs(dx)) {
             scrollDy = vy > 0 ? edgeDeltaY : -edgeDeltaY;
-            scrollDx = scrollDy * dx / dy;
+            float value = Math.abs(scrollDy * dx / dy);
+            scrollDx = vx > 0 ? value : -value;
         } else {
             scrollDx = vx > 0 ? edgeDeltaX : -edgeDeltaX;
-            scrollDy = scrollDx * dy / dx;
+            float value = Math.abs(scrollDx * dy / dx);
+            scrollDy = vy > 0 ? value : -value;
         }
         result[0] = (int) scrollDx;
         result[1] = (int) scrollDy;
