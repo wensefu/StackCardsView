@@ -15,6 +15,4 @@ public interface ISwipeTouchHelper {
     void onCoverChanged(View cover);
 
     boolean isCoverIdle();
-
-    void computeScroll();
 }

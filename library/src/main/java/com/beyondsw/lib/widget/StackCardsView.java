@@ -92,6 +92,7 @@ public class StackCardsView extends FrameLayout {
 
     //滑动时的最大旋转角度
     private float mMaxRotation = 45;
+    private boolean mFastSwipeAllowed = true;
 
     private float[] mScaleArray;
     private float[] mAlphaArray;
@@ -104,8 +105,7 @@ public class StackCardsView extends FrameLayout {
     private boolean mNeedAdjustChild;
     private Runnable mPendingTask;
 
-    Paint paint = new Paint();
-    Paint paint2 = new Paint();
+    Paint paint;
 
     public StackCardsView(Context context) {
         this(context, null);
@@ -115,11 +115,11 @@ public class StackCardsView extends FrameLayout {
         super(context, attrs);
         setChildrenDrawingOrderEnabled(true);
 
-        paint.setColor(Color.RED);
-        paint.setStrokeWidth(4);
-
-        paint2.setColor(Color.YELLOW);
-        paint2.setStrokeWidth(10);
+        if (DEBUG) {
+            paint = new Paint();
+            paint.setColor(Color.RED);
+            paint.setStrokeWidth(4);
+        }
     }
 
     public interface OnCardSwipedListener {
@@ -216,12 +216,8 @@ public class StackCardsView extends FrameLayout {
         mMaxRotation = rotation;
     }
 
-    @Override
-    public void computeScroll() {
-        Log.d(TAG, "computeScroll: mTouchHelper=" + mTouchHelper);
-        if (mTouchHelper != null) {
-            mTouchHelper.computeScroll();
-        }
+    public boolean isFastSwipeAllowed() {
+        return mFastSwipeAllowed;
     }
 
     @Override
@@ -290,24 +286,22 @@ public class StackCardsView extends FrameLayout {
     @Override
     protected void dispatchDraw(Canvas canvas) {
         super.dispatchDraw(canvas);
-        Log.d(TAG, "dispatchDraw: ");
-        if (getChildCount() > 0) {
-            View cover = getChildAt(0);
-            Log.d(TAG, "dispatchDraw: cover.x="+cover.getX());
-            Log.d(TAG, "dispatchDraw: cover.y="+cover.getY());
-            Log.d(TAG, "dispatchDraw: cover.left="+cover.getLeft());
-            Log.d(TAG, "dispatchDraw: cover.top="+cover.getTop());
-            Log.d(TAG, "dispatchDraw: cover.right="+cover.getRight());
-            Log.d(TAG, "dispatchDraw: cover.bottom="+cover.getBottom());
-            canvas.drawLine(0, cover.getY(), getWidth(), cover.getY(), paint);
-            canvas.drawLine(cover.getX(), 0, cover.getX(), getHeight(), paint);
-            canvas.drawLine(0, cover.getY() + cover.getHeight(), getWidth(), cover.getY() + cover.getHeight(), paint);
-            canvas.drawLine(cover.getX() + cover.getWidth(), 0, cover.getX() + cover.getWidth(), getHeight(), paint);
+        if (DEBUG) {
+            log(TAG, "dispatchDraw: ");
+            if (getChildCount() > 0) {
+                View cover = getChildAt(0);
+                canvas.drawLine(0, cover.getY(), getWidth(), cover.getY(), paint);
+                canvas.drawLine(cover.getX(), 0, cover.getX(), getHeight(), paint);
+                canvas.drawLine(0, cover.getY() + cover.getHeight(), getWidth(), cover.getY() + cover.getHeight(), paint);
+                canvas.drawLine(cover.getX() + cover.getWidth(), 0, cover.getX() + cover.getWidth(), getHeight(), paint);
+            }
         }
     }
 
     void onCoverScrolled(float progress) {
-        invalidate();
+        if (DEBUG) {
+            invalidate();
+        }
         final int cnt = getChildCount();
         if (mScaleArray == null || mScaleArray.length < cnt) {
             if (BuildConfig.DEBUG) {
