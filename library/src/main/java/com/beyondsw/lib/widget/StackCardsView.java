@@ -15,6 +15,7 @@ import android.widget.FrameLayout;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 
 /**
@@ -433,6 +434,13 @@ public class StackCardsView extends FrameLayout {
             }
             cnt = Math.min(cnt, mLayerCnt);
             for (int i = 0; i < cnt; i++) {
+                if (i > 0) {
+                    try {
+                        TimeUnit.MILLISECONDS.sleep(1000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
                 addViewInLayout(mAdapter.getView(i, null, this), -1, getDefaultLayoutParams(), false);
             }
             mNeedAdjustChild = true;

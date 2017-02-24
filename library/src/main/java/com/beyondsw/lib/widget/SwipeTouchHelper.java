@@ -291,7 +291,7 @@ public class SwipeTouchHelper implements ISwipeTouchHelper, Handler.Callback {
             }
         }
         final int direction = dir;
-        ObjectAnimator animator = ObjectAnimator.ofFloat(mTouchChild, property, target).setDuration(4000);
+        ObjectAnimator animator = ObjectAnimator.ofFloat(mTouchChild, property, target).setDuration(200);
         animator.addListener(new AnimatorListenerAdapter() {
 
             @Override
@@ -398,7 +398,7 @@ public class SwipeTouchHelper implements ISwipeTouchHelper, Handler.Callback {
         float dx = mTouchChild.getX() - mChildInitX;
         float dy = mTouchChild.getY() - mChildInitY;
         int[] fdxArray = calcScrollDistance(vx, vy, dx, dy);
-        mScroller.startScroll((int) mTouchChild.getX(), (int) mTouchChild.getY(), fdxArray[0], fdxArray[1],2000);
+        mScroller.startScroll((int) mTouchChild.getX(), (int) mTouchChild.getY(), fdxArray[0], fdxArray[1],260);
         mHandler.obtainMessage(MSG_DO_DISAPPEAR_SCROLL).sendToTarget();
         return true;
     }

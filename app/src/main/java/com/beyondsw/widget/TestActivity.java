@@ -48,7 +48,7 @@ public class TestActivity extends AppCompatActivity {
         @Override
         public Object instantiateItem(ViewGroup container, int position) {
             View pageView;
-            if (position == 1) {
+            if (position == 0) {
                 pageView = View.inflate(TestActivity.this, R.layout.page1, null);
                 stackCardsView = (StackCardsView) pageView.findViewById(R.id.cards);
                 stackCardsView.addOnCardSwipedListener(this);
