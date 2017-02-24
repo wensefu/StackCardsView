@@ -236,6 +236,7 @@ public class TestActivity extends AppCompatActivity {
                         .placeholder(R.drawable.img_dft)
                         .crossFade()
                         .into(img);
+                view.requestLayout();
 //                view.setAlpha(0.3f);
 //                view.animate().alpha(1).setDuration(100).start();
             }

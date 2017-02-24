@@ -15,7 +15,6 @@ import android.widget.FrameLayout;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 
 /**
@@ -256,12 +255,21 @@ public class StackCardsView extends FrameLayout {
     }
 
     @Override
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+        log(TAG,"onMeasure");
+    }
+
+    @Override
     protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
         log(TAG,"onLayout start");
         super.onLayout(changed, left, top, right, bottom);
         if (mNeedAdjustChild) {
             mNeedAdjustChild = false;
             adjustChildren();
+            if (mTouchHelper != null) {
+                mTouchHelper.onChildChanged();
+            }
         }
         log(TAG,"onLayout done");
     }
@@ -292,9 +300,6 @@ public class StackCardsView extends FrameLayout {
             mTranslationYArray[i] = translationY;
             child.setTranslationY(translationY);
 
-            if (i == 0 && mTouchHelper != null) {
-                mTouchHelper.onCoverChanged(child);
-            }
             if (layerIndex < mMaxVisibleCnt - 1) {
                 layerIndex++;
             }
@@ -424,28 +429,15 @@ public class StackCardsView extends FrameLayout {
         int cnt = mAdapter == null ? 0 : mAdapter.getCount();
         if (cnt == 0) {
             removeAllViewsInLayout();
-            if (mTouchHelper != null) {
-                mTouchHelper.onCoverChanged(null);
-            }
         } else {
             removeAllViewsInLayout();
-            if (mTouchHelper != null) {
-                mTouchHelper.onCoverChanged(null);
-            }
             cnt = Math.min(cnt, mLayerCnt);
             for (int i = 0; i < cnt; i++) {
-                if (i > 0) {
-                    try {
-                        TimeUnit.MILLISECONDS.sleep(1000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-                addViewInLayout(mAdapter.getView(i, null, this), -1, getDefaultLayoutParams(), false);
+                addViewInLayout(mAdapter.getView(i, null, this), -1, getDefaultLayoutParams(), true);
             }
             mNeedAdjustChild = true;
-            requestLayout();
         }
+        requestLayout();
         log(TAG,"initChildren end");
     }
 
@@ -494,6 +486,7 @@ public class StackCardsView extends FrameLayout {
     public boolean onInterceptTouchEvent(MotionEvent ev) {
         if (mTouchHelper == null) {
             mTouchHelper = new SwipeTouchHelper(this);
+            mTouchHelper.onChildChanged();
         }
         return mTouchHelper.onInterceptTouchEvent(ev);
     }

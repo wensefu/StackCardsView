@@ -4,6 +4,7 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.ObjectAnimator;
 import android.content.Context;
+import android.graphics.Rect;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
@@ -47,6 +48,7 @@ public class SwipeTouchHelper implements ISwipeTouchHelper, Handler.Callback {
     private VelocityTracker mVelocityTracker;
     private boolean mIsBeingDragged;
     private boolean mIsDisappearing;
+    private int mDisappearCnt;
     private View mTouchChild;
     private float mChildInitX;
     private float mChildInitY;
@@ -71,9 +73,6 @@ public class SwipeTouchHelper implements ISwipeTouchHelper, Handler.Callback {
         mMaxFlingVelocity = configuration.getScaledMaximumFlingVelocity();
         float density = context.getResources().getDisplayMetrics().density;
         mMinFlingVelocity = (int) (MIN_FLING_VELOCITY * density);
-        if (mSwipeView.getChildCount() > 0) {
-            updateCoverInfo(mSwipeView.getChildAt(0));
-        }
         mSpringSystem = SpringSystem.create();
         mScroller = new OverScroller(context, new DecelerateInterpolator());
         mHandler = new Handler(this);
@@ -97,15 +96,6 @@ public class SwipeTouchHelper implements ISwipeTouchHelper, Handler.Callback {
         }
     };
 
-    private void updateCoverInfo(View cover) {
-        mTouchChild = cover;
-        if (mTouchChild != null) {
-            mChildInitX = mTouchChild.getX();
-            mChildInitY = mTouchChild.getY();
-            mChildInitRotation = mTouchChild.getRotation();
-        }
-    }
-
     @Override
     public boolean isCoverIdle() {
         if (mTouchChild == null) {
@@ -116,10 +106,13 @@ public class SwipeTouchHelper implements ISwipeTouchHelper, Handler.Callback {
     }
 
     @Override
-    public void onCoverChanged(View cover) {
-        updateCoverInfo(cover);
-        if (StackCardsView.DEBUG) {
-            mSwipeView.invalidate();
+    public void onChildChanged() {
+        mDisappearCnt = 0;
+        mTouchChild = mSwipeView.getChildCount() > 0 ? mSwipeView.getChildAt(0) : null;
+        if (mTouchChild != null) {
+            mChildInitX = mTouchChild.getX();
+            mChildInitY = mTouchChild.getY();
+            mChildInitRotation = mTouchChild.getRotation();
         }
     }
 
@@ -130,11 +123,13 @@ public class SwipeTouchHelper implements ISwipeTouchHelper, Handler.Callback {
         }
     }
 
-    private boolean isOnTouchableChild(float x, float y) {
-        if (mTouchChild == null) {
+    private static boolean isTouchOnView(View view, float x, float y) {
+        if (view == null) {
             return false;
         }
-        return x >= mTouchChild.getLeft() && x <= mTouchChild.getRight() && y >= mTouchChild.getTop() && y <= mTouchChild.getBottom();
+        Rect rect = new Rect();
+        view.getHitRect(rect);
+        return rect.contains((int) x, (int) y);
     }
 
     private boolean isDirectionAllowDismiss() {
@@ -435,6 +430,7 @@ public class SwipeTouchHelper implements ISwipeTouchHelper, Handler.Callback {
             logw(TAG, "onInterceptTouchEvent,mTouchChild == null");
             return false;
         }
+        final View touchChild = mTouchChild;
         final int action = ev.getAction() & MotionEvent.ACTION_MASK;
         log(TAG, "onInterceptTouchEvent action=" + action);
         if (action == MotionEvent.ACTION_DOWN) {
@@ -457,8 +453,7 @@ public class SwipeTouchHelper implements ISwipeTouchHelper, Handler.Callback {
         final float y = ev.getY();
         switch (action) {
             case MotionEvent.ACTION_DOWN:
-                mOnTouchableChild = isOnTouchableChild(x, y);
-                if (!mOnTouchableChild) {
+                if (!(mOnTouchableChild = isTouchOnView(touchChild, x, y))) {
                     return false;
                 }
                 requestParentDisallowInterceptTouchEvent(true);
@@ -486,15 +481,15 @@ public class SwipeTouchHelper implements ISwipeTouchHelper, Handler.Callback {
     public boolean onTouchEvent(MotionEvent ev) {
         final int action = ev.getAction() & MotionEvent.ACTION_MASK;
         log(TAG, "onTouchEvent action=" + action + ",mOnTouchableChild=" + mOnTouchableChild);
+        if (mTouchChild == null) {
+            return false;
+        }
         float x = ev.getX();
         float y = ev.getY();
         mVelocityTracker.addMovement(ev);
         switch (action) {
             case MotionEvent.ACTION_DOWN:
                 if (!mOnTouchableChild) {
-                    return false;
-                }
-                if (mTouchChild == null) {
                     return false;
                 }
                 break;
