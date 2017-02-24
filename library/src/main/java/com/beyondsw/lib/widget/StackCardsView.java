@@ -256,18 +256,18 @@ public class StackCardsView extends FrameLayout {
 
     @Override
     protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
+        log(TAG,"onLayout start");
         super.onLayout(changed, left, top, right, bottom);
-        log(TAG, "onLayout: mNeedAdjustChild=" + mNeedAdjustChild);
         if (mNeedAdjustChild) {
             mNeedAdjustChild = false;
             adjustChildren();
         }
+        log(TAG,"onLayout done");
     }
 
     void adjustChildren() {
         final int cnt = getChildCount();
         if (cnt == 0) {
-            log(TAG, "adjustChildren: getChildCount=0");
             return;
         }
         int layerIndex = 0;
@@ -293,7 +293,6 @@ public class StackCardsView extends FrameLayout {
 
             if (i == 0 && mTouchHelper != null) {
                 mTouchHelper.onCoverChanged(child);
-                log(TAG, "adjustChildren: onCoverChanged");
             }
             if (layerIndex < mMaxVisibleCnt - 1) {
                 layerIndex++;
@@ -420,28 +419,26 @@ public class StackCardsView extends FrameLayout {
     }
 
     private void initChildren() {
+        log(TAG,"initChildren start");
         int cnt = mAdapter == null ? 0 : mAdapter.getCount();
         if (cnt == 0) {
             removeAllViewsInLayout();
             if (mTouchHelper != null) {
                 mTouchHelper.onCoverChanged(null);
-                log(TAG,"removeAllViewsInLayout onCoverChanged");
             }
         } else {
             removeAllViewsInLayout();
             if (mTouchHelper != null) {
                 mTouchHelper.onCoverChanged(null);
-                log(TAG,"removeAllViewsInLayout2 onCoverChanged");
             }
             cnt = Math.min(cnt, mLayerCnt);
             for (int i = 0; i < cnt; i++) {
                 addViewInLayout(mAdapter.getView(i, null, this), -1, getDefaultLayoutParams(), false);
             }
             mNeedAdjustChild = true;
-            log(TAG, "initChildren: mNeedAdjustChild set to true and requestLayout");
             requestLayout();
-            log(TAG, "initChildren: requestLayout was called");
         }
+        log(TAG,"initChildren end");
     }
 
     public void setAdapter(Adapter adapter) {
@@ -477,14 +474,11 @@ public class StackCardsView extends FrameLayout {
         @Override
         public void onItemRemoved(int position) {
             super.onItemRemoved(position);
-            log(TAG, "onItemRemoved: position=" + position);
         }
     }
 
     @Override
     public boolean dispatchTouchEvent(MotionEvent ev) {
-        final int action = ev.getAction() & MotionEvent.ACTION_MASK;
-        log("SwipeTouchHelper", "dispatchTouchEvent: action=" + action);
         return super.dispatchTouchEvent(ev);
     }
 
