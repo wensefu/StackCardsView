@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="StackCardsView">
+        <!--&lt;!&ndash; direction allowed to swipe &ndash;&gt;-->
+        <!--<attr name="swipe_direction"/>-->
+
+        <!--&lt;!&ndash; direction allowed to swipe-dimiss &ndash;&gt;-->
+        <!--<attr name="dismiss_direction"/>-->
+
+        <!--&lt;!&ndash; max visible count when 'slience' &ndash;&gt;-->
+        <!--<attr name="maxVisibleCnt" format="integer"/>-->
+
+        <!--&lt;!&ndash; max children count can add to this widget at one time &ndash;&gt;-->
+        <!--<attr name="maxLayerCnt" format="integer"/>-->
+
+        <!--<attr name="layerEdgeHeight" format="dimension"/>-->
+        <!--<attr name="scaleFactor" format="float"/>-->
+        <!--<attr name="alphaFactor" format="float"/>-->
+        <!--<attr name="dismissFactor" format="float"/>-->
+        <!--<attr name="dragSensitivity" format="float"/>-->
+        <!--<attr name="maxRotation" format="float"/>-->
+        <!--<attr name="fastSwipeAllowed" format="boolean"/>-->
+    </declare-styleable>
+</resources>

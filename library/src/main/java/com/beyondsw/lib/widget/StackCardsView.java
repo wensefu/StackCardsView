@@ -5,6 +5,7 @@ import android.database.Observable;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Rect;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.Gravity;
@@ -65,7 +66,7 @@ public class StackCardsView extends FrameLayout {
     /**
      * 同时最多add到控件的子view数
      */
-    private int mLayerCnt = 4;
+    private int mMaxLayerCnt = 4;
 
     /**
      * 层叠效果高度
@@ -81,8 +82,9 @@ public class StackCardsView extends FrameLayout {
     private static final float ALPHA_FACTOR = 0.6f;
     private float mAlphaFactor = ALPHA_FACTOR;
 
-    private static final int SWIPE_TO_DISMISS_DISTINCE = 400;
-    private int mDismissDistance = SWIPE_TO_DISMISS_DISTINCE;
+    private static final float SWIPE_TO_DISMISS_FACTOR = .3f;
+    private float mDismissFactor = SWIPE_TO_DISMISS_FACTOR;
+    private float mDismissDistance;
 
     //卡片消失时的透明度
     private static final float DISMISS_ALPHA = 0.3f;
@@ -118,7 +120,8 @@ public class StackCardsView extends FrameLayout {
 
         if (DEBUG) {
             paint = new Paint();
-            paint.setColor(Color.GREEN);
+            paint.setColor(Color.BLUE);
+            paint.setStyle(Paint.Style.STROKE);
             paint.setStrokeWidth(10);
         }
     }
@@ -184,14 +187,14 @@ public class StackCardsView extends FrameLayout {
 
     /**
      * 设置某个方向不可以滑动消失,支持以下值:<br/>
-     * <p>
+     * <p/>
      * {@link #SWIPE_ALL},<br/>
      * {@link #SWIPE_LEFT},<br/>
      * {@link #SWIPE_RIGHT},<br/>
      * {@link #SWIPE_UP},<br/>
      * {@link #SWIPE_DOWN},<br/>
      *
-     * @param direction 方向
+     * @param direction
      */
     public void removeDismissDirection(int direction) {
         mDismissDirection &= ~direction;
@@ -209,7 +212,7 @@ public class StackCardsView extends FrameLayout {
      * {@link #SWIPE_UP},<br/>
      * {@link #SWIPE_DOWN},<br/>
      *
-     * @param direction 方向
+     * @param direction
      */
     public void addSwipeDirection(int direction) {
         mSwipeDirection |= direction;
@@ -217,14 +220,14 @@ public class StackCardsView extends FrameLayout {
 
     /**
      * 设置某个方向不可以滑动,支持以下值:<br/>
-     * <p>
+     * <p/>
      * {@link #SWIPE_ALL},<br/>
      * {@link #SWIPE_LEFT},<br/>
      * {@link #SWIPE_RIGHT},<br/>
      * {@link #SWIPE_UP},<br/>
      * {@link #SWIPE_DOWN},<br/>
      *
-     * @param direction 方向
+     * @param direction
      */
     public void removeSwipeDirection(int direction) {
         mSwipeDirection &= ~direction;
@@ -238,15 +241,19 @@ public class StackCardsView extends FrameLayout {
         return mMaxRotation;
     }
 
-    float getDragSensitivity(){
+    float getDragSensitivity() {
         return mDragSensitivity;
     }
 
-    public int getDismissDistance() {
+    public float getDismissDistance() {
+        if (mDismissDistance > 0) {
+            return mDismissDistance;
+        }
+        mDismissDistance = getWidth() * mDismissFactor;
         return mDismissDistance;
     }
 
-    public void setMaxRotatin(float rotation){
+    public void setMaxRotatin(float rotation) {
         mMaxRotation = rotation;
     }
 
@@ -257,12 +264,12 @@ public class StackCardsView extends FrameLayout {
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-        log(TAG,"onMeasure");
+        log(TAG, "onMeasure");
     }
 
     @Override
     protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
-        log(TAG,"onLayout start");
+        log(TAG, "onLayout start");
         super.onLayout(changed, left, top, right, bottom);
         if (mNeedAdjustChild) {
             mNeedAdjustChild = false;
@@ -271,7 +278,7 @@ public class StackCardsView extends FrameLayout {
                 mTouchHelper.onChildChanged();
             }
         }
-        log(TAG,"onLayout done");
+        log(TAG, "onLayout done");
     }
 
     void adjustChildren() {
@@ -316,6 +323,7 @@ public class StackCardsView extends FrameLayout {
     }
 
     void onCardDismissed(int direction) {
+        log(TAG, "onCardDismissed,direction=" + direction);
         if (mCardSwipedListenrs != null) {
             for (OnCardSwipedListener listener : mCardSwipedListenrs) {
                 listener.onCardDismiss(direction);
@@ -323,16 +331,22 @@ public class StackCardsView extends FrameLayout {
         }
     }
 
+    Rect rect = new Rect();
+
     @Override
     protected void dispatchDraw(Canvas canvas) {
         super.dispatchDraw(canvas);
 //        if (DEBUG) {
 //            if (getChildCount() > 0) {
 //                View cover = getChildAt(0);
-//                canvas.drawLine(0, cover.getY(), getWidth(), cover.getY(), paint);
-//                canvas.drawLine(cover.getX(), 0, cover.getX(), getHeight(), paint);
-//                canvas.drawLine(0, cover.getY() + cover.getHeight(), getWidth(), cover.getY() + cover.getHeight(), paint);
-//                canvas.drawLine(cover.getX() + cover.getWidth(), 0, cover.getX() + cover.getWidth(), getHeight(), paint);
+//                cover.getHitRect(rect);
+////                paint.setColor(Color.RED);
+////                canvas.drawLine(0, cover.getY(), getWidth(), cover.getY(), paint);
+////                canvas.drawLine(cover.getX(), 0, cover.getX(), getHeight(), paint);
+////                canvas.drawLine(0, cover.getY() + cover.getHeight(), getWidth(), cover.getY() + cover.getHeight(), paint);
+////                canvas.drawLine(cover.getX() + cover.getWidth(), 0, cover.getX() + cover.getWidth(), getHeight(), paint);
+////                paint.setColor(Color.GREEN);
+//                canvas.drawRect(rect, paint);
 //            }
 //        }
     }
@@ -342,42 +356,35 @@ public class StackCardsView extends FrameLayout {
             invalidate();
         }
         final int cnt = getChildCount();
-        if (mScaleArray == null || mScaleArray.length < cnt) {
-            if (BuildConfig.DEBUG) {
-                throw new RuntimeException("onCoverScrolled: mScaleArray does not match");
-            } else {
-                Log.e(TAG, "onCoverScrolled: mScaleArray does not match");
-                return;
-            }
-        }
         float preScale;
         float preAlpha;
         float preTranslationY;
-        float targetScale;
-        float targetAlpha;
-        float targetTranslationY;
+        float maxScale;
+        float maxAlpha;
+        float maxTranslationY;
         float progressScale;
-        for (int i = 1; i < cnt; i++) {
+        int index = mTouchHelper.getAdjustStartIndex();
+        for (int i = index + 1; i < cnt; i++) {
             View child = getChildAt(i);
             if (child.getVisibility() != View.GONE) {
                 if (mScaleArray != null) {
-                    preScale = mScaleArray[i];
-                    targetScale = mScaleArray[i - 1];
-                    progressScale = preScale + (targetScale - preScale) * progress;
+                    preScale = mScaleArray[i - index];
+                    maxScale = mScaleArray[i - index - 1];
+                    progressScale = preScale + (maxScale - preScale) * progress;
                     child.setScaleX(progressScale);
                     child.setScaleY(progressScale);
                 }
 
                 if (mAlphaArray != null) {
-                    preAlpha = mAlphaArray[i];
-                    targetAlpha = mAlphaArray[i - 1];
-                    child.setAlpha(preAlpha + (targetAlpha - preAlpha) * progress);
+                    preAlpha = mAlphaArray[i - index];
+                    maxAlpha = mAlphaArray[i - index - 1];
+                    child.setAlpha(preAlpha + (maxAlpha - preAlpha) * progress);
                 }
 
                 if (mTranslationYArray != null) {
-                    preTranslationY = mTranslationYArray[i];
-                    targetTranslationY = mTranslationYArray[i - 1];
-                    child.setTranslationY(preTranslationY + (targetTranslationY - preTranslationY) * progress);
+                    preTranslationY = mTranslationYArray[i - index];
+                    maxTranslationY = mTranslationYArray[i - index - 1];
+                    child.setTranslationY(preTranslationY + (maxTranslationY - preTranslationY) * progress);
                 }
             }
         }
@@ -425,20 +432,20 @@ public class StackCardsView extends FrameLayout {
     }
 
     private void initChildren() {
-        log(TAG,"initChildren start");
+        log(TAG, "initChildren start");
         int cnt = mAdapter == null ? 0 : mAdapter.getCount();
         if (cnt == 0) {
             removeAllViewsInLayout();
         } else {
             removeAllViewsInLayout();
-            cnt = Math.min(cnt, mLayerCnt);
+            cnt = Math.min(cnt, mMaxLayerCnt);
             for (int i = 0; i < cnt; i++) {
                 addViewInLayout(mAdapter.getView(i, null, this), -1, getDefaultLayoutParams(), true);
             }
             mNeedAdjustChild = true;
         }
         requestLayout();
-        log(TAG,"initChildren end");
+        log(TAG, "initChildren end");
     }
 
     public void setAdapter(Adapter adapter) {
@@ -454,6 +461,7 @@ public class StackCardsView extends FrameLayout {
         public void onDataSetChanged() {
             super.onDataSetChanged();
             if (mTouchHelper != null && !mTouchHelper.isCoverIdle()) {
+                log(TAG, "onDataSetChanged, touch busy");
                 mPendingTask = new Runnable() {
                     @Override
                     public void run() {
@@ -461,6 +469,7 @@ public class StackCardsView extends FrameLayout {
                     }
                 };
             } else {
+                log(TAG, "onDataSetChanged, touch idle");
                 initChildren();
             }
         }
