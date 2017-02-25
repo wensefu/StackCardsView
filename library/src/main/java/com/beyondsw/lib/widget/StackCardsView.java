@@ -352,7 +352,7 @@ public class StackCardsView extends FrameLayout {
         }
     }
 
-    void onCoverScrolled(float progress) {
+    void smoothUpdateChildrenPosition(float progress, int startIndex) {
         if (DEBUG) {
             invalidate();
         }
@@ -364,27 +364,26 @@ public class StackCardsView extends FrameLayout {
         float maxAlpha;
         float maxTranslationY;
         float progressScale;
-        int index = mTouchHelper.getAdjustStartIndex();
-        for (int i = index + 1; i < cnt; i++) {
+        for (int i = startIndex + 1; i < cnt; i++) {
             View child = getChildAt(i);
             if (child.getVisibility() != View.GONE) {
                 if (mScaleArray != null) {
-                    preScale = mScaleArray[i - index];
-                    maxScale = mScaleArray[i - index - 1];
+                    preScale = mScaleArray[i - startIndex];
+                    maxScale = mScaleArray[i - startIndex - 1];
                     progressScale = preScale + (maxScale - preScale) * progress;
                     child.setScaleX(progressScale);
                     child.setScaleY(progressScale);
                 }
 
                 if (mAlphaArray != null) {
-                    preAlpha = mAlphaArray[i - index];
-                    maxAlpha = mAlphaArray[i - index - 1];
+                    preAlpha = mAlphaArray[i - startIndex];
+                    maxAlpha = mAlphaArray[i - startIndex - 1];
                     child.setAlpha(preAlpha + (maxAlpha - preAlpha) * progress);
                 }
 
                 if (mTranslationYArray != null) {
-                    preTranslationY = mTranslationYArray[i - index];
-                    maxTranslationY = mTranslationYArray[i - index - 1];
+                    preTranslationY = mTranslationYArray[i - startIndex];
+                    maxTranslationY = mTranslationYArray[i - startIndex - 1];
                     child.setTranslationY(preTranslationY + (maxTranslationY - preTranslationY) * progress);
                 }
             }

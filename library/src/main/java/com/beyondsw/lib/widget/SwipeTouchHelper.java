@@ -89,7 +89,7 @@ public class SwipeTouchHelper implements ISwipeTouchHelper{
             mTouchChild.setX(mAnimStartX - (mAnimStartX - mChildInitX) * value);
             mTouchChild.setY(mAnimStartY - (mAnimStartY - mChildInitY) * value);
             mTouchChild.setRotation(mAnimStartRotation - (mAnimStartRotation - mChildInitRotation) * value);
-            onCoverScrolled();
+            onCoverScrolled(mTouchChild);
         }
 
         @Override
@@ -241,7 +241,7 @@ public class SwipeTouchHelper implements ISwipeTouchHelper{
         }
         mSwipeView.getMaxRotation();
         mTouchChild.setRotation(rotation);
-        onCoverScrolled();
+        onCoverScrolled(mTouchChild);
     }
 
     private void animateToInitPos() {
@@ -390,7 +390,6 @@ public class SwipeTouchHelper implements ISwipeTouchHelper{
                 mDisappearingCnt--;
                 mDisappearedCnt++;
                 mSwipeView.onCoverStatusChanged(isCoverIdle());
-                mSwipeView.adjustChildren();
             }
 
             @Override
@@ -400,7 +399,7 @@ public class SwipeTouchHelper implements ISwipeTouchHelper{
         animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
             @Override
             public void onAnimationUpdate(ValueAnimator animation) {
-                onCoverScrolled();
+                onCoverScrolled(disappearView, mDisappearedCnt + mDisappearingCnt - 1);
             }
         });
         animator.start();
@@ -465,18 +464,19 @@ public class SwipeTouchHelper implements ISwipeTouchHelper{
         return (float) Math.sin(f);
     }
 
-    private void onCoverScrolled() {
-        if (mTouchChild == null) {
-            return;
-        }
-        float dx = mTouchChild.getX() - mChildInitX;
-        float dy = mTouchChild.getY() - mChildInitY;
+    private void onCoverScrolled(View movingView) {
+        onCoverScrolled(movingView, mDisappearedCnt + mDisappearingCnt);
+    }
+
+    private void onCoverScrolled(View movingView,int startIndex) {
+        float dx = movingView.getX() - mChildInitX;
+        float dy = movingView.getY() - mChildInitY;
         double distance = Math.sqrt(dx * dx + dy * dy);
         float dismiss_distance = mSwipeView.getDismissDistance();
         if (distance >= dismiss_distance) {
-            mSwipeView.onCoverScrolled(1);
+            mSwipeView.smoothUpdateChildrenPosition(1,startIndex);
         } else {
-            mSwipeView.onCoverScrolled((float) distance / dismiss_distance);
+            mSwipeView.smoothUpdateChildrenPosition((float) distance/ dismiss_distance,startIndex);
         }
     }
 
