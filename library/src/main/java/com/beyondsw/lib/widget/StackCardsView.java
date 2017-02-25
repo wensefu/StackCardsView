@@ -333,10 +333,11 @@ public class StackCardsView extends FrameLayout {
 
     Rect rect = new Rect();
 
+
     @Override
     protected void dispatchDraw(Canvas canvas) {
         super.dispatchDraw(canvas);
-//        if (DEBUG) {
+        if (DEBUG) {
 //            if (getChildCount() > 0) {
 //                View cover = getChildAt(0);
 //                cover.getHitRect(rect);
@@ -348,7 +349,7 @@ public class StackCardsView extends FrameLayout {
 ////                paint.setColor(Color.GREEN);
 //                canvas.drawRect(rect, paint);
 //            }
-//        }
+        }
     }
 
     void onCoverScrolled(float progress) {

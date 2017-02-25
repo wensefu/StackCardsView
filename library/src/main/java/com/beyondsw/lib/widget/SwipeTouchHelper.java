@@ -3,19 +3,17 @@ package com.beyondsw.lib.widget;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.ObjectAnimator;
+import android.animation.PropertyValuesHolder;
+import android.animation.ValueAnimator;
 import android.content.Context;
 import android.graphics.Rect;
-import android.os.Handler;
-import android.os.Message;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.VelocityTracker;
 import android.view.View;
 import android.view.ViewConfiguration;
 import android.view.ViewParent;
-import android.view.animation.DecelerateInterpolator;
 import android.view.animation.Interpolator;
-import android.widget.OverScroller;
 
 import com.beyondsw.lib.widget.rebound.SimpleSpringListener;
 import com.beyondsw.lib.widget.rebound.Spring;
@@ -27,7 +25,7 @@ import com.beyondsw.lib.widget.rebound.SpringSystem;
 /**
  * Created by wensefu on 17-2-12.
  */
-public class SwipeTouchHelper implements ISwipeTouchHelper, Handler.Callback {
+public class SwipeTouchHelper implements ISwipeTouchHelper{
 
     //// TODO: 2017/2/14
 //    2，消失过程中改变alpha值
@@ -60,12 +58,8 @@ public class SwipeTouchHelper implements ISwipeTouchHelper, Handler.Callback {
     private float mAnimStartRotation;
     private SpringSystem mSpringSystem;
     private Spring mSpring;
-    private OverScroller mScroller;
 
     private static final int MIN_FLING_VELOCITY = 400;
-
-    private Handler mHandler;
-    private static final int MSG_DO_DISAPPEAR_SCROLL = 1;
 
     public SwipeTouchHelper(StackCardsView view) {
         mSwipeView = view;
@@ -77,8 +71,6 @@ public class SwipeTouchHelper implements ISwipeTouchHelper, Handler.Callback {
         float density = context.getResources().getDisplayMetrics().density;
         mMinFastDisappearVelocity = (int) (MIN_FLING_VELOCITY * density);
         mSpringSystem = SpringSystem.create();
-        mScroller = new OverScroller(context, new DecelerateInterpolator());
-        mHandler = new Handler(this);
     }
 
     //cp from ViewDragHelper
@@ -384,8 +376,34 @@ public class SwipeTouchHelper implements ISwipeTouchHelper, Handler.Callback {
         float dx = disappearView.getX() - initX;
         float dy = disappearView.getY() - initY;
         int[] fdxArray = calcScrollDistance(disappearView, vx, vy, dx, dy);
-        mScroller.startScroll((int) disappearView.getX(), (int) disappearView.getY(), fdxArray[0], fdxArray[1], 260);
-        mHandler.obtainMessage(MSG_DO_DISAPPEAR_SCROLL, disappearView).sendToTarget();
+        float animDx = fdxArray[0];
+        float animDy = fdxArray[1];
+        long duration = computeSettleDuration((int) animDx, (int) animDy, (int) vx, (int) vy);
+        PropertyValuesHolder xp = PropertyValuesHolder.ofFloat("x", disappearView.getX() + animDx);
+        PropertyValuesHolder yp = PropertyValuesHolder.ofFloat("y", disappearView.getY() + animDy);
+        ObjectAnimator animator = ObjectAnimator.ofPropertyValuesHolder(disappearView,xp,yp).setDuration(duration);
+        animator.setInterpolator(sInterpolator);
+        animator.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                mSwipeView.onCardDismissed(0); //// TODO: 17-2-23
+                mDisappearingCnt--;
+                mDisappearedCnt++;
+                mSwipeView.onCoverStatusChanged(isCoverIdle());
+                mSwipeView.adjustChildren();
+            }
+
+            @Override
+            public void onAnimationStart(Animator animation) {
+            }
+        });
+        animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator animation) {
+                onCoverScrolled();
+            }
+        });
+        animator.start();
         return true;
     }
 
@@ -414,7 +432,6 @@ public class SwipeTouchHelper implements ISwipeTouchHelper, Handler.Callback {
 
         int xduration = computeAxisDuration(dx, xvel, 1024);
         int yduration = computeAxisDuration(dy, yvel, 1024);
-
         return (int) (xduration * xweight + yduration * yweight);
     }
 
@@ -475,27 +492,6 @@ public class SwipeTouchHelper implements ISwipeTouchHelper, Handler.Callback {
             mVelocityTracker.recycle();
             mVelocityTracker = null;
         }
-    }
-
-    @Override
-    public boolean handleMessage(Message msg) {
-        if (msg.what == MSG_DO_DISAPPEAR_SCROLL) {
-            if (mScroller.computeScrollOffset()) {
-                View view = (View) msg.obj;
-                view.setX(mScroller.getCurrX());
-                view.setY(mScroller.getCurrY());
-                onCoverScrolled();
-                Message m = mHandler.obtainMessage(MSG_DO_DISAPPEAR_SCROLL, view);
-                mHandler.sendMessageDelayed(m, 15);
-            } else {
-                mSwipeView.onCardDismissed(0); //// TODO: 17-2-23
-                mDisappearingCnt--;
-                mDisappearedCnt++;
-                mSwipeView.onCoverStatusChanged(isCoverIdle());
-                mSwipeView.adjustChildren();
-            }
-        }
-        return true;
     }
 
     @Override
