@@ -270,6 +270,7 @@ public class StackCardsView extends FrameLayout {
     }
 
     void updateChildrenPosition(float progress, int startIndex) {
+        log(TAG, "updateChildrenPosition,startIndex=" + startIndex);
         if (DEBUG) {
             invalidate();
         }
@@ -400,7 +401,18 @@ public class StackCardsView extends FrameLayout {
 
         @Override
         public void onItemRemoved(int position) {
-            super.onItemRemoved(position);
+            log(TAG, "onItemRemoved, position=" + position + ",childCnt=" + getChildCount());
+            View toRemove = getChildAt(position);
+            removeViewInLayout(toRemove);
+            if (mTouchHelper != null) {
+                mTouchHelper.onChildRemoved(toRemove);
+            }
+            final int childCount = getChildCount();
+            if (mAdapter.getCount() > childCount) {
+                View view = mAdapter.getView(childCount,null,StackCardsView.this);
+                addViewInLayout(view, -1, buildLayoutParams(mAdapter, childCount), true);
+            }
+            requestLayout();
         }
     }
 

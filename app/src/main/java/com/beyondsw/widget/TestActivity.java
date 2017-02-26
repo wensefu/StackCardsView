@@ -272,7 +272,7 @@ public class TestActivity extends AppCompatActivity {
             } else {
                 if (pos >= 0 && pos < mImages.size()) {
                     mImages.remove(pos);
-                    notifyDataSetChanged();
+                    notifyItemRemoved(0);
                 }
             }
         }
