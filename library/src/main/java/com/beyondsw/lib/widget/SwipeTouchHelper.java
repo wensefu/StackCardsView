@@ -25,7 +25,7 @@ import com.beyondsw.lib.widget.rebound.SpringSystem;
 /**
  * Created by wensefu on 17-2-12.
  */
-public class SwipeTouchHelper implements ISwipeTouchHelper{
+public class SwipeTouchHelper implements ISwipeTouchHelper {
 
     //// TODO: 2017/2/14
 //    2，消失过程中改变alpha值
@@ -119,11 +119,11 @@ public class SwipeTouchHelper implements ISwipeTouchHelper{
 
     private void updateTouchChild() {
         int index = mDisappearedCnt + mDisappearingCnt;
-        log(TAG, "updateTouchChild index=" + index);
         mTouchChild = mSwipeView.getChildCount() > index ? mSwipeView.getChildAt(index) : null;
         if (mTouchChild != null) {
             mChildInitX = mTouchChild.getX();
             mChildInitY = mTouchChild.getY();
+            log(TAG, "updateTouchChild mChildInitX=" + mChildInitX + ",mChildInitY=" + mChildInitY + ",index=" + index);
             mChildInitRotation = mTouchChild.getRotation();
         }
     }
@@ -261,6 +261,7 @@ public class SwipeTouchHelper implements ISwipeTouchHelper{
     }
 
     private void animateToDisappear() {
+        log(TAG, "animateToDisappear");
         if (mTouchChild == null) {
             return;
         }
@@ -362,15 +363,21 @@ public class SwipeTouchHelper implements ISwipeTouchHelper{
     }
 
     private boolean doFastDisappear(float vx, float vy) {
+        log(TAG, "doFastDisappear");
         if (mTouchChild == null) {
             return false;
         }
         if (Math.abs(vx) < mMinFastDisappearVelocity && Math.abs(vy) < mMinFastDisappearVelocity) {
             return false;
         }
+        if (!isVDirectionAllowDismiss(vx, vx)) {
+            return false;
+        }
+
         final View disappearView = mTouchChild;
         final float initX = mChildInitX;
         final float initY = mChildInitY;
+        log(TAG, "doFastDisappear,initX=" + initX + ",initY=" + initY);
         mDisappearingCnt++;
         updateTouchChild();
         float dx = disappearView.getX() - initX;
@@ -381,7 +388,7 @@ public class SwipeTouchHelper implements ISwipeTouchHelper{
         long duration = computeSettleDuration((int) animDx, (int) animDy, (int) vx, (int) vy);
         PropertyValuesHolder xp = PropertyValuesHolder.ofFloat("x", disappearView.getX() + animDx);
         PropertyValuesHolder yp = PropertyValuesHolder.ofFloat("y", disappearView.getY() + animDy);
-        ObjectAnimator animator = ObjectAnimator.ofPropertyValuesHolder(disappearView,xp,yp).setDuration(duration);
+        ObjectAnimator animator = ObjectAnimator.ofPropertyValuesHolder(disappearView, xp, yp).setDuration(duration);
         animator.setInterpolator(sInterpolator);
         animator.addListener(new AnimatorListenerAdapter() {
             @Override
@@ -468,15 +475,15 @@ public class SwipeTouchHelper implements ISwipeTouchHelper{
         onCoverScrolled(movingView, mDisappearedCnt + mDisappearingCnt);
     }
 
-    private void onCoverScrolled(View movingView,int startIndex) {
+    private void onCoverScrolled(View movingView, int startIndex) {
         float dx = movingView.getX() - mChildInitX;
         float dy = movingView.getY() - mChildInitY;
         double distance = Math.sqrt(dx * dx + dy * dy);
         float dismiss_distance = mSwipeView.getDismissDistance();
         if (distance >= dismiss_distance) {
-            mSwipeView.smoothUpdateChildrenPosition(1,startIndex);
+            mSwipeView.smoothUpdateChildrenPosition(1, startIndex);
         } else {
-            mSwipeView.smoothUpdateChildrenPosition((float) distance/ dismiss_distance,startIndex);
+            mSwipeView.smoothUpdateChildrenPosition((float) distance / dismiss_distance, startIndex);
         }
     }
 
@@ -582,26 +589,21 @@ public class SwipeTouchHelper implements ISwipeTouchHelper{
                 if (!mIsBeingDragged) {
                     break;
                 }
-                if (isDistanceAllowDismiss()) {
-                    if (isDirectionAllowDismiss()) {
-                        animateToDisappear();
-                    } else {
-                        animateToInitPos();
-                    }
-                } else {
-                    if (mSwipeView.isFastSwipeAllowed()) {
-                        final VelocityTracker velocityTracker = mVelocityTracker;
-                        velocityTracker.computeCurrentVelocity(1000, mMaxVelocity);
-                        float xv = mVelocityTracker.getXVelocity();
-                        float yv = mVelocityTracker.getYVelocity();
-                        if (!isVDirectionAllowDismiss(xv, yv) || !doFastDisappear(xv, yv)) {
-                            animateToInitPos();
-                        }
-                    } else {
-                        animateToInitPos();
+                mIsBeingDragged = false;
+                if (mSwipeView.isFastSwipeAllowed()) {
+                    final VelocityTracker velocityTracker = mVelocityTracker;
+                    velocityTracker.computeCurrentVelocity(1000, mMaxVelocity);
+                    float xv = mVelocityTracker.getXVelocity();
+                    float yv = mVelocityTracker.getYVelocity();
+                    if (doFastDisappear(xv, yv)) {
+                        break;
                     }
                 }
-                mIsBeingDragged = false;
+                if (isDistanceAllowDismiss() && isDirectionAllowDismiss()) {
+                    animateToDisappear();
+                } else {
+                    animateToInitPos();
+                }
                 break;
             case MotionEvent.ACTION_POINTER_UP:
                 break;
