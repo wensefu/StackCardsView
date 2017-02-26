@@ -18,7 +18,6 @@ import com.bumptech.glide.Glide;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Created by wensefu on 2017/2/12.
@@ -86,15 +85,14 @@ public class TestActivity extends AppCompatActivity {
         public void onCardDismiss(int direction) {
             adapter.remove(0);
             if (adapter.getCount() < 2) {
-                stackCardsView.removeSwipeDirection(StackCardsView.SWIPE_ALL);
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
-                        try {
-                            TimeUnit.MILLISECONDS.sleep(random.nextInt(1000));
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
+//                        try {
+//                            TimeUnit.MILLISECONDS.sleep(Math.min(random.nextInt(1000),200));
+//                        } catch (InterruptedException e) {
+//                            e.printStackTrace();
+//                        }
                         for (int i = 0; i < ImageUrls.images.length; i++) {
                             mImages.add(ImageUrls.images[i]);
                         }
@@ -102,15 +100,10 @@ public class TestActivity extends AppCompatActivity {
                             @Override
                             public void run() {
                                 adapter.notifyDataSetChanged();
-                                if(adapter.getCount()>1){
-                                    stackCardsView.addSwipeDirection(StackCardsView.SWIPE_ALL);
-                                }
                             }
                         });
                     }
                 }).start();
-            }else{
-                stackCardsView.addSwipeDirection(StackCardsView.SWIPE_ALL);
             }
         }
     }
@@ -185,6 +178,29 @@ public class TestActivity extends AppCompatActivity {
             for (int i = 0; i < ImageUrls.images.length; i++) {
                 mImages.add(ImageUrls.images[i]);
             }
+        }
+
+        @Override
+        public int getSwipeDirection(int position) {
+            if (position == getCount() - 1) {
+                return StackCardsView.SWIPE_NONE;
+            }
+            return super.getSwipeDirection(position);
+        }
+
+        @Override
+        public int getDismissDirection(int position) {
+            return super.getDismissDirection(position);
+        }
+
+        @Override
+        public boolean isFastDismissAllowed(int position) {
+            return super.isFastDismissAllowed(position);
+        }
+
+        @Override
+        public int getMaxRotation(int position) {
+            return 8;
         }
 
         @Override

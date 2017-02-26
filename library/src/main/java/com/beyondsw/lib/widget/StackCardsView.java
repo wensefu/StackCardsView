@@ -53,8 +53,7 @@ public class StackCardsView extends FrameLayout {
      */
     public static final int SWIPE_ALL = SWIPE_LEFT | SWIPE_RIGHT | SWIPE_UP | SWIPE_DOWN;
 
-    private int mSwipeDirection = SWIPE_ALL;
-    private int mDismissDirection = SWIPE_ALL;
+    public static final int SWIPE_NONE = 0;
 
     private Adapter mAdapter;
 
@@ -92,10 +91,6 @@ public class StackCardsView extends FrameLayout {
 
     private static final float DRAG_SENSITIVITY = 1f;
     private float mDragSensitivity = DRAG_SENSITIVITY;
-
-    //滑动时的最大旋转角度
-    private float mMaxRotation = 8;
-    private boolean mFastSwipeAllowed = true;
 
     private float[] mScaleArray;
     private float[] mAlphaArray;
@@ -171,76 +166,6 @@ public class StackCardsView extends FrameLayout {
         throw new UnsupportedOperationException("removeAllViews() is not supported");
     }
 
-    /**
-     * 设置可以滑动消失的方向,支持以下值:<br/>
-     * {@link #SWIPE_ALL},<br/>
-     * {@link #SWIPE_LEFT},<br/>
-     * {@link #SWIPE_RIGHT},<br/>
-     * {@link #SWIPE_UP},<br/>
-     * {@link #SWIPE_DOWN},<br/>
-     *
-     * @param direction 方向
-     */
-    public void addDismissDirection(int direction) {
-        mDismissDirection |= direction;
-    }
-
-    /**
-     * 设置某个方向不可以滑动消失,支持以下值:<br/>
-     * <p/>
-     * {@link #SWIPE_ALL},<br/>
-     * {@link #SWIPE_LEFT},<br/>
-     * {@link #SWIPE_RIGHT},<br/>
-     * {@link #SWIPE_UP},<br/>
-     * {@link #SWIPE_DOWN},<br/>
-     *
-     * @param direction
-     */
-    public void removeDismissDirection(int direction) {
-        mDismissDirection &= ~direction;
-    }
-
-    public int getDismissDirection() {
-        return mDismissDirection;
-    }
-
-    /**
-     * 设置可以滑动的方向,支持以下值:<br/>
-     * {@link #SWIPE_ALL},<br/>
-     * {@link #SWIPE_LEFT},<br/>
-     * {@link #SWIPE_RIGHT},<br/>
-     * {@link #SWIPE_UP},<br/>
-     * {@link #SWIPE_DOWN},<br/>
-     *
-     * @param direction
-     */
-    public void addSwipeDirection(int direction) {
-        mSwipeDirection |= direction;
-    }
-
-    /**
-     * 设置某个方向不可以滑动,支持以下值:<br/>
-     * <p/>
-     * {@link #SWIPE_ALL},<br/>
-     * {@link #SWIPE_LEFT},<br/>
-     * {@link #SWIPE_RIGHT},<br/>
-     * {@link #SWIPE_UP},<br/>
-     * {@link #SWIPE_DOWN},<br/>
-     *
-     * @param direction
-     */
-    public void removeSwipeDirection(int direction) {
-        mSwipeDirection &= ~direction;
-    }
-
-    public int getSwipeDirection() {
-        return mSwipeDirection;
-    }
-
-    float getMaxRotation() {
-        return mMaxRotation;
-    }
-
     float getDragSensitivity() {
         return mDragSensitivity;
     }
@@ -251,14 +176,6 @@ public class StackCardsView extends FrameLayout {
         }
         mDismissDistance = getWidth() * mDismissFactor;
         return mDismissDistance;
-    }
-
-    public void setMaxRotatin(float rotation) {
-        mMaxRotation = rotation;
-    }
-
-    public boolean isFastSwipeAllowed() {
-        return mFastSwipeAllowed;
     }
 
     @Override
@@ -352,7 +269,7 @@ public class StackCardsView extends FrameLayout {
         }
     }
 
-    void smoothUpdateChildrenPosition(float progress, int startIndex) {
+    void updateChildrenPosition(float progress, int startIndex) {
         if (DEBUG) {
             invalidate();
         }
@@ -424,11 +341,12 @@ public class StackCardsView extends FrameLayout {
         mHasRegisteredObserver = true;
     }
 
-    private LayoutParams getDefaultLayoutParams() {
-        LayoutParams lp = new LayoutParams(LayoutParams.WRAP_CONTENT,
-                LayoutParams.WRAP_CONTENT);
-        lp.gravity = Gravity.CENTER;
-        return lp;
+    private static LayoutParams buildLayoutParams(Adapter adapter, int position) {
+        return new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT, Gravity.CENTER)
+                .swipeDirection(adapter.getSwipeDirection(position))
+                .dismissDirection(adapter.getDismissDirection(position))
+                .fastDismissAllowed(adapter.isFastDismissAllowed(position))
+                .maxRotation(adapter.getMaxRotation(position));
     }
 
     private void initChildren() {
@@ -440,7 +358,7 @@ public class StackCardsView extends FrameLayout {
             removeAllViewsInLayout();
             cnt = Math.min(cnt, mMaxLayerCnt);
             for (int i = 0; i < cnt; i++) {
-                addViewInLayout(mAdapter.getView(i, null, this), -1, getDefaultLayoutParams(), true);
+                addViewInLayout(mAdapter.getView(i, null, this), -1, buildLayoutParams(mAdapter, i), true);
             }
             mNeedAdjustChild = true;
         }
@@ -505,15 +423,50 @@ public class StackCardsView extends FrameLayout {
         return mTouchHelper.onTouchEvent(ev);
     }
 
+    public static class LayoutParams extends FrameLayout.LayoutParams {
+
+        public int swipeDirection = SWIPE_ALL;
+        public int dismissDirection = SWIPE_ALL;
+        public boolean fastDismissAllowed = true;
+        public float maxRotation;
+
+
+        public LayoutParams(int width, int height, int gravity) {
+            super(width, height);
+            this.gravity = gravity;
+        }
+
+
+        public LayoutParams swipeDirection(int direction) {
+            this.swipeDirection = direction;
+            return this;
+        }
+
+        public LayoutParams dismissDirection(int direction) {
+            this.dismissDirection = direction;
+            return this;
+        }
+
+        public LayoutParams fastDismissAllowed(boolean allowed) {
+            this.fastDismissAllowed = allowed;
+            return this;
+        }
+
+        public LayoutParams maxRotation(float maxRotation) {
+            this.maxRotation = maxRotation;
+            return this;
+        }
+    }
+
     public static abstract class Adapter {
 
         private final CardDataObservable mObservable = new CardDataObservable();
 
-        public void registerDataObserver(CardDataObserver observer) {
+        public final void registerDataObserver(CardDataObserver observer) {
             mObservable.registerObserver(observer);
         }
 
-        public void unregisterDataObserver(CardDataObserver observer) {
+        public final void unregisterDataObserver(CardDataObserver observer) {
             mObservable.unregisterObserver(observer);
         }
 
@@ -531,6 +484,22 @@ public class StackCardsView extends FrameLayout {
 
         public final void notifyItemRemoved(int position) {
             mObservable.notifyItemRemoved(position);
+        }
+
+        public int getSwipeDirection(int position) {
+            return SWIPE_ALL;
+        }
+
+        public int getDismissDirection(int position) {
+            return SWIPE_ALL;
+        }
+
+        public boolean isFastDismissAllowed(int position) {
+            return true;
+        }
+
+        public int getMaxRotation(int position) {
+            return 0;
         }
     }
 
