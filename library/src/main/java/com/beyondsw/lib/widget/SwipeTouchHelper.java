@@ -47,9 +47,9 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
     private boolean mOnTouchableChild;
     private boolean mIsBeingDragged;
     private boolean mIsTouchOn;
-    private int mDisappearedCnt;
     private int mDisappearingCnt;
     private View mTouchChild;
+    private int mTouchChildIndex;
     private float mChildInitX;
     private float mChildInitY;
     private float mChildInitRotation;
@@ -107,20 +107,23 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
 
     @Override
     public void onChildChanged() {
-        mDisappearedCnt = 0;
-        mDisappearingCnt = 0;
         updateTouchChild();
     }
 
     @Override
     public void onChildRemoved(View child) {
-        mDisappearedCnt--;
         updateTouchChild();
     }
 
     private void updateTouchChild() {
-        int index = mDisappearedCnt + mDisappearingCnt;
-        mTouchChild = mSwipeView.getChildCount() > index ? mSwipeView.getChildAt(index) : null;
+        int childCnt = mSwipeView.getChildCount();
+        if (mTouchChild == null) {
+            mTouchChildIndex = childCnt > 0 ? 0 : -1;
+        } else {
+            final int nextIndex = mTouchChildIndex + 1;
+            mTouchChildIndex = nextIndex < childCnt ? nextIndex : -1;
+        }
+        mTouchChild = mTouchChildIndex > 0 ? mSwipeView.getChildAt(mTouchChildIndex) : null;
         if (mTouchChild != null) {
             mChildInitX = mTouchChild.getX();
             mChildInitY = mTouchChild.getY();
@@ -274,10 +277,10 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
         if (mTouchChild == null) {
             return;
         }
+        mDisappearingCnt++;
         final View disappearView = mTouchChild;
         final float initX = mChildInitX;
         final float initY = mChildInitY;
-        mDisappearingCnt++;
         updateTouchChild();
         final float curX = disappearView.getX();
         final float curY = disappearView.getY();
@@ -322,7 +325,6 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
 
             @Override
             public void onAnimationEnd(Animator animation) {
-                mDisappearedCnt++;
                 mDisappearingCnt--;
                 mSwipeView.onCardDismissed(direction);
                 mSwipeView.onCoverStatusChanged(isCoverIdle());
@@ -400,7 +402,6 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
             @Override
             public void onAnimationEnd(Animator animation) {
                 mDisappearingCnt--;
-                mDisappearedCnt++;
                 mSwipeView.onCardDismissed(0); //// TODO: 17-2-23
                 mSwipeView.onCoverStatusChanged(isCoverIdle());
             }

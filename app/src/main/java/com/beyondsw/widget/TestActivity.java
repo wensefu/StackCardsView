@@ -186,7 +186,7 @@ public class TestActivity extends AppCompatActivity {
 //                return StackCardsView.SWIPE_NONE;
 //            }
 //            return super.getSwipeDirection(position);
-            return StackCardsView.SWIPE_LEFT | StackCardsView.SWIPE_RIGHT;
+            return StackCardsView.SWIPE_ALL;
         }
 
         @Override
