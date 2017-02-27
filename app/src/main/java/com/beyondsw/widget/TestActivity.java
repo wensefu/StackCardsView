@@ -182,10 +182,11 @@ public class TestActivity extends AppCompatActivity {
 
         @Override
         public int getSwipeDirection(int position) {
-            if (position == getCount() - 1) {
-                return StackCardsView.SWIPE_NONE;
-            }
-            return super.getSwipeDirection(position);
+//            if (position == getCount() - 1) {
+//                return StackCardsView.SWIPE_NONE;
+//            }
+//            return super.getSwipeDirection(position);
+            return StackCardsView.SWIPE_LEFT | StackCardsView.SWIPE_RIGHT;
         }
 
         @Override
@@ -242,7 +243,7 @@ public class TestActivity extends AppCompatActivity {
                 }
                 view = View.inflate(TestActivity.this, R.layout.item, null);
                 view.setTag(position);
-                view.setOnClickListener(this);
+//                view.setOnClickListener(this);
                 MyImageView img = (MyImageView) view.findViewById(R.id.img);
                 img.setPos(position);
                 TextView textView = (TextView) view.findViewById(R.id.text);

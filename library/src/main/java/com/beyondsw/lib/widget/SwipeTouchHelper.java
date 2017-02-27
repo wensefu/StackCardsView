@@ -39,12 +39,12 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
     private float mLastY;
     private float mInitDownX;
     private float mInitDownY;
-    private boolean mOnTouchableChild;
     private int mDragSlop;
     private int mMaxVelocity;
     private float mMinVelocity;
     private float mMinFastDisappearVelocity;
     private VelocityTracker mVelocityTracker;
+    private boolean mOnTouchableChild;
     private boolean mIsBeingDragged;
     private boolean mIsTouchOn;
     private int mDisappearedCnt;
@@ -115,12 +115,11 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
     @Override
     public void onChildRemoved(View child) {
         mDisappearedCnt--;
-        log(TAG, "onChildRemoved,mDisappearedCnt=" + mDisappearedCnt + ",mDisappearingCnt=" + mDisappearingCnt);
+        updateTouchChild();
     }
 
     private void updateTouchChild() {
         int index = mDisappearedCnt + mDisappearingCnt;
-        log(TAG, "updateTouchChild,mDisappearedCnt=" + mDisappearedCnt + ",mDisappearingCnt=" + mDisappearingCnt);
         mTouchChild = mSwipeView.getChildCount() > index ? mSwipeView.getChildAt(index) : null;
         if (mTouchChild != null) {
             mChildInitX = mTouchChild.getX();
@@ -209,7 +208,7 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
     private boolean canDrag(float dx, float dy) {
         final StackCardsView.LayoutParams lp = (StackCardsView.LayoutParams) mTouchChild.getLayoutParams();
         final int direction = lp.swipeDirection;
-        log(TAG, "canDrag direction=" + direction);
+        log(TAG, "canDrag,direction=" + direction + ",dx=" + dx + ",dy=" + dy);
         if (direction == StackCardsView.SWIPE_ALL) {
             return true;
         } else if (direction == 0) {
@@ -246,7 +245,6 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
             rotation = -maxRotation;
         }
         mTouchChild.setRotation(rotation);
-        log(TAG, "performDrag,mDisappearedCnt=" + mDisappearedCnt + ",mDisappearingCnt=" + mDisappearingCnt);
         onCoverScrolled(mTouchChild);
     }
 
@@ -257,6 +255,11 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
             }
             mAnimStartX = mTouchChild.getX();
             mAnimStartY = mTouchChild.getY();
+            float dx = mAnimStartX - mChildInitX;
+            float dy = mAnimStartY - mChildInitY;
+            if (Float.compare(dx, 0) == 0 && Float.compare(dy, 0) == 0) {
+                return;
+            }
             mAnimStartRotation = mTouchChild.getRotation();
             mSpring = mSpringSystem.createSpring();
             mSpring.setSpringConfig(SpringConfig.fromOrigamiTensionAndFriction(40, 5));
@@ -274,7 +277,6 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
         final View disappearView = mTouchChild;
         final float initX = mChildInitX;
         final float initY = mChildInitY;
-        mIsBeingDragged = false;
         mDisappearingCnt++;
         updateTouchChild();
         final float curX = disappearView.getX();
@@ -313,7 +315,6 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
             target = curY + delta;
             duration = computeSettleDuration(0, (int) delta, 0, 0);
         }
-        log(TAG, "animateToDisappear,duration=" + duration);
         final int direction = dir;
         ObjectAnimator animator = ObjectAnimator.ofFloat(disappearView, property, target).setDuration(duration);
         animator.setInterpolator(sInterpolator);
@@ -382,7 +383,6 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
         final View disappearView = mTouchChild;
         final float initX = mChildInitX;
         final float initY = mChildInitY;
-        log(TAG, "doFastDisappear,initX=" + initX + ",initY=" + initY);
         mDisappearingCnt++;
         mSwipeView.updateChildrenPosition(1, mDisappearedCnt + mDisappearingCnt - 1);
         updateTouchChild();
@@ -501,6 +501,11 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
         }
     }
 
+    private void resetTouch(){
+        mIsTouchOn = false;
+        mIsBeingDragged = false;
+    }
+
     @Override
     public boolean onInterceptTouchEvent(MotionEvent ev) {
         if (mTouchChild == null) {
@@ -515,12 +520,6 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
         }
         if (mVelocityTracker == null) {
             mVelocityTracker = VelocityTracker.obtain();
-        }
-        if (action == MotionEvent.ACTION_CANCEL || action == MotionEvent.ACTION_UP) {
-            mIsBeingDragged = false;
-            mIsTouchOn = false;
-            mSwipeView.onCoverStatusChanged(isCoverIdle());
-            return false;
         }
         if (mIsBeingDragged && action != MotionEvent.ACTION_DOWN) {
             return true;
@@ -543,13 +542,18 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
                 float dy = y - mInitDownY;
                 mLastX = x;
                 mLastY = y;
-                if (Math.sqrt(dx * dx + dy * dy) > mDragSlop) {
-                    return true;
+                if (dx * dx + dy * dy > mDragSlop * mDragSlop && canDrag(dx, dy)) {
+                    mIsBeingDragged = true;
                 }
                 break;
             case MotionEvent.ACTION_POINTER_DOWN:
                 break;
             case MotionEvent.ACTION_POINTER_UP:
+                break;
+            case MotionEvent.ACTION_UP:
+            case MotionEvent.ACTION_CANCEL:
+                resetTouch();
+                mSwipeView.onCoverStatusChanged(isCoverIdle());
                 break;
         }
         return mIsBeingDragged;
@@ -572,16 +576,16 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
                 }
                 break;
             case MotionEvent.ACTION_MOVE:
-                //子view未消费down事件时，mIsBeingDragged可能为false
-                float dx = x - mLastX;
-                float dy = y - mLastY;
-                if (!canDrag(dx, dy)) {
-                    log(TAG, "ACTION_MOVE canDrag=false");
-                    mIsBeingDragged = false;
-                    return false;
-                }
+                //子view未消费down事件时，mIsBeingDragged为false
                 if (!mIsBeingDragged) {
                     cancelSpringIfNeeded();
+                    float dx = x - mInitDownX;
+                    float dy = y - mInitDownY;
+                    if (dx * dx + dy * dy <= mDragSlop * mDragSlop || !canDrag(dx, dy)) {
+                        mLastX = x;
+                        mLastY = y;
+                        return false;
+                    }
                     mIsBeingDragged = true;
                 }
                 performDrag(x - mLastX, y - mLastY);
@@ -592,23 +596,26 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
                 break;
             case MotionEvent.ACTION_CANCEL:
             case MotionEvent.ACTION_UP:
-                mIsTouchOn = false;
-                final StackCardsView.LayoutParams lp = (StackCardsView.LayoutParams) mTouchChild.getLayoutParams();
-                if (lp.fastDismissAllowed) {
-                    final VelocityTracker velocityTracker = mVelocityTracker;
-                    velocityTracker.computeCurrentVelocity(1000, mMaxVelocity);
-                    float xv = mVelocityTracker.getXVelocity();
-                    float yv = mVelocityTracker.getYVelocity();
-                    if (doFastDisappear(xv, yv)) {
-                        break;
+                log(TAG, "ACTION_UP,mIsBeingDragged=" + mIsBeingDragged);
+                if (mIsBeingDragged) {
+                    final StackCardsView.LayoutParams lp = (StackCardsView.LayoutParams) mTouchChild.getLayoutParams();
+                    if (lp.fastDismissAllowed) {
+                        final VelocityTracker velocityTracker = mVelocityTracker;
+                        velocityTracker.computeCurrentVelocity(1000, mMaxVelocity);
+                        float xv = mVelocityTracker.getXVelocity();
+                        float yv = mVelocityTracker.getYVelocity();
+                        if (doFastDisappear(xv, yv)) {
+                            resetTouch();
+                            break;
+                        }
+                    }
+                    if (isDistanceAllowDismiss() && isDirectionAllowDismiss()) {
+                        animateToDisappear();
+                    } else {
+                        animateToInitPos();
                     }
                 }
-                if (isDistanceAllowDismiss() && isDirectionAllowDismiss()) {
-                    animateToDisappear();
-                } else {
-                    animateToInitPos();
-                }
-                mIsBeingDragged = false;
+                resetTouch();
                 mSwipeView.onCoverStatusChanged(isCoverIdle());
                 break;
             case MotionEvent.ACTION_POINTER_UP:
