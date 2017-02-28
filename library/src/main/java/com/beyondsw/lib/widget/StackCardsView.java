@@ -53,6 +53,9 @@ public class StackCardsView extends FrameLayout {
      */
     public static final int SWIPE_ALL = SWIPE_LEFT | SWIPE_RIGHT | SWIPE_UP | SWIPE_DOWN;
 
+    /**
+     * 禁止滑动
+     */
     public static final int SWIPE_NONE = 0;
 
     private Adapter mAdapter;
@@ -88,20 +91,19 @@ public class StackCardsView extends FrameLayout {
     //卡片消失时的透明度
     private static final float DISMISS_ALPHA = 0.3f;
     private float mDismissAlpha = DISMISS_ALPHA;
-
     private static final float DRAG_SENSITIVITY = 1f;
     private float mDragSensitivity = DRAG_SENSITIVITY;
+    private ISwipeTouchHelper mTouchHelper;
+    private List<OnCardSwipedListener> mCardSwipedListenrs;
+
+    private boolean mNeedAdjustChildren;
+
+    private Runnable mPendingTask;
 
     private float[] mScaleArray;
     private float[] mAlphaArray;
     private float[] mTranslationYArray;
 
-    private ISwipeTouchHelper mTouchHelper;
-
-    private List<OnCardSwipedListener> mCardSwipedListenrs;
-
-    private boolean mNeedAdjustChild;
-    private Runnable mPendingTask;
 
     Paint paint;
 
@@ -186,47 +188,57 @@ public class StackCardsView extends FrameLayout {
 
     @Override
     protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
-        log(TAG, "onLayout start");
+        log(TAG, "onLayout start,mNeedAdjustChildren=" + mNeedAdjustChildren);
         super.onLayout(changed, left, top, right, bottom);
-        if (mNeedAdjustChild) {
-            mNeedAdjustChild = false;
+        if (mNeedAdjustChildren) {
             adjustChildren();
             if (mTouchHelper != null) {
                 mTouchHelper.onChildChanged();
             }
+            mNeedAdjustChildren = false;
         }
         log(TAG, "onLayout done");
     }
 
-    void adjustChildren() {
+    private void adjustChildren() {
         final int cnt = getChildCount();
         if (cnt == 0) {
             return;
         }
-        int layerIndex = 0;
+        float scale = 0;
+        float alpha;
+        float translationY = 0;
+        int half_childHeight = 0;
+        int maxVisibleIndex = Math.min(cnt, mMaxVisibleCnt) - 1;
         mScaleArray = new float[cnt];
         mAlphaArray = new float[cnt];
         mTranslationYArray = new float[cnt];
-        mScaleArray[0] = 1;
-        mAlphaArray[0] = 1;
-        mTranslationYArray[0] = 0;
-        for (int i = 0; i < cnt; i++) {
+        for (int i = 0; i <= maxVisibleIndex; i++) {
             View child = getChildAt(i);
-            int half_childHeight = child.getMeasuredHeight() / 2;
-            float scale = 1 - layerIndex * (1 - mScaleFactor);
+            if (half_childHeight == 0) {
+                half_childHeight = child.getMeasuredHeight() / 2;
+            }
+            scale = (float) Math.pow(mScaleFactor, i);
             mScaleArray[i] = scale;
+            alpha = (float) Math.pow(mAlphaFactor, i);
+            mAlphaArray[i] = alpha;
+            translationY = half_childHeight * (1 - scale) + mLayerEdgeHeight * i;
+            mTranslationYArray[i] = translationY;
+
             child.setScaleX(scale);
             child.setScaleY(scale);
-            float alpha = 1 - layerIndex * (1 - mAlphaFactor);
-            mAlphaArray[i] = alpha;
             child.setAlpha(alpha);
-            float translationY = half_childHeight * (1 - scale) + mLayerEdgeHeight * layerIndex;
-            mTranslationYArray[i] = translationY;
             child.setTranslationY(translationY);
-
-            if (layerIndex < mMaxVisibleCnt - 1) {
-                layerIndex++;
-            }
+        }
+        for (int i = maxVisibleIndex + 1; i < cnt; i++) {
+            View child = getChildAt(i);
+            mScaleArray[i] = scale;
+            mAlphaArray[i] = 0;
+            mTranslationYArray[i] = translationY;
+            child.setScaleX(scale);
+            child.setScaleY(scale);
+            child.setAlpha(0);
+            child.setTranslationY(translationY);
         }
     }
 
@@ -270,39 +282,41 @@ public class StackCardsView extends FrameLayout {
     }
 
     void updateChildrenPosition(float progress, int startIndex) {
-        log(TAG, "updateChildrenPosition,startIndex=" + startIndex);
         if (DEBUG) {
             invalidate();
         }
         final int cnt = getChildCount();
-        float preScale;
-        float preAlpha;
-        float preTranslationY;
+        if (startIndex >= cnt || startIndex < 1) {
+            return;
+        }
+        float oriScale;
+        float oriAlpha;
+        float oriTranslationY;
         float maxScale;
         float maxAlpha;
         float maxTranslationY;
         float progressScale;
-        for (int i = startIndex + 1; i < cnt; i++) {
+        for (int i = startIndex; i < cnt; i++) {
             View child = getChildAt(i);
             if (child.getVisibility() != View.GONE) {
                 if (mScaleArray != null) {
-                    preScale = mScaleArray[i - startIndex];
-                    maxScale = mScaleArray[i - startIndex - 1];
-                    progressScale = preScale + (maxScale - preScale) * progress;
+                    oriScale = mScaleArray[i - startIndex + 1];
+                    maxScale = mScaleArray[i - startIndex];
+                    progressScale = oriScale + (maxScale - oriScale) * progress;
                     child.setScaleX(progressScale);
                     child.setScaleY(progressScale);
                 }
 
                 if (mAlphaArray != null) {
-                    preAlpha = mAlphaArray[i - startIndex];
-                    maxAlpha = mAlphaArray[i - startIndex - 1];
-                    child.setAlpha(preAlpha + (maxAlpha - preAlpha) * progress);
+                    oriAlpha = mAlphaArray[i - startIndex + 1];
+                    maxAlpha = mAlphaArray[i - startIndex];
+                    child.setAlpha(oriAlpha + (maxAlpha - oriAlpha) * progress);
                 }
 
                 if (mTranslationYArray != null) {
-                    preTranslationY = mTranslationYArray[i - startIndex];
-                    maxTranslationY = mTranslationYArray[i - startIndex - 1];
-                    child.setTranslationY(preTranslationY + (maxTranslationY - preTranslationY) * progress);
+                    oriTranslationY = mTranslationYArray[i - startIndex + 1];
+                    maxTranslationY = mTranslationYArray[i - startIndex];
+                    child.setTranslationY(oriTranslationY + (maxTranslationY - oriTranslationY) * progress);
                 }
             }
         }
@@ -361,8 +375,8 @@ public class StackCardsView extends FrameLayout {
             for (int i = 0; i < cnt; i++) {
                 addViewInLayout(mAdapter.getView(i, null, this), -1, buildLayoutParams(mAdapter, i), true);
             }
-            mNeedAdjustChild = true;
         }
+        mNeedAdjustChildren = true;
         requestLayout();
         log(TAG, "initChildren end");
     }
@@ -404,13 +418,13 @@ public class StackCardsView extends FrameLayout {
             log(TAG, "onItemRemoved, position=" + position + ",childCnt=" + getChildCount());
             View toRemove = getChildAt(position);
             removeViewInLayout(toRemove);
-            if (mTouchHelper != null) {
-                mTouchHelper.onChildRemoved(toRemove);
-            }
             final int childCount = getChildCount();
             if (mAdapter.getCount() > childCount) {
-                View view = mAdapter.getView(childCount,null,StackCardsView.this);
+                View view = mAdapter.getView(childCount, null, StackCardsView.this);
                 addViewInLayout(view, -1, buildLayoutParams(mAdapter, childCount), true);
+            }
+            if (mTouchHelper != null) {
+                mTouchHelper.onChildRemoved();
             }
             requestLayout();
         }
@@ -425,7 +439,6 @@ public class StackCardsView extends FrameLayout {
     public boolean onInterceptTouchEvent(MotionEvent ev) {
         if (mTouchHelper == null) {
             mTouchHelper = new SwipeTouchHelper(this);
-            mTouchHelper.onChildChanged();
         }
         return mTouchHelper.onInterceptTouchEvent(ev);
     }

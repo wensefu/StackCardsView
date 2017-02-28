@@ -1,7 +1,6 @@
 package com.beyondsw.lib.widget;
 
 import android.view.MotionEvent;
-import android.view.View;
 
 /**
  * Created by wensefu on 17-2-12.
@@ -17,11 +16,12 @@ public interface ISwipeTouchHelper {
      */
     void onChildChanged();
 
-    void onChildRemoved(View child);
+    void onChildRemoved();
 
     /**
      * @return 当前是否有子view在拖动，做消失动画等,如果有则不进行数据刷新,等待空闲状态时再刷新
      */
     boolean isCoverIdle();
 
+    int getAdjustStartIndex();
 }
