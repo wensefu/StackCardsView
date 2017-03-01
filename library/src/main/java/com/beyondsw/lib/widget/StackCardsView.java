@@ -278,8 +278,8 @@ public class StackCardsView extends FrameLayout {
     protected void dispatchDraw(Canvas canvas) {
         super.dispatchDraw(canvas);
         if (DEBUG) {
-//            if (getChildCount() > 0) {
-//                View cover = getChildAt(0);
+//            if (mTouchHelper!=null && getChildCount() > 1) {
+//                View cover = getChildAt(1);
 //                cover.getHitRect(rect);
 ////                paint.setColor(Color.RED);
 ////                canvas.drawLine(0, cover.getY(), getWidth(), cover.getY(), paint);
@@ -292,7 +292,7 @@ public class StackCardsView extends FrameLayout {
         }
     }
 
-    void onDisappearStart(){
+    void tryAppendChild(){
         final int childCount = getChildCount();
         if (mAdapter.getCount() > childCount) {
             View view = mAdapter.getView(childCount, null, StackCardsView.this);
@@ -334,7 +334,7 @@ public class StackCardsView extends FrameLayout {
                 if (mAlphaArray != null) {
                     oriAlpha = mAlphaArray[oriIndex];
                     maxAlpha = mAlphaArray[i - startIndex];
-                    child.setAlpha(oriAlpha + (maxAlpha - oriAlpha) * progress);
+                    child.setAlpha(oriAlpha + (maxAlpha - oriAlpha) * progress * 1.5f);
                 }
 
                 if (mTranslationYArray != null) {

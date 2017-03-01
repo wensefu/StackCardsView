@@ -4,6 +4,7 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.ObjectAnimator;
 import android.animation.PropertyValuesHolder;
+import android.animation.ValueAnimator;
 import android.content.Context;
 import android.graphics.Rect;
 import android.util.Log;
@@ -13,6 +14,7 @@ import android.view.View;
 import android.view.ViewConfiguration;
 import android.view.ViewParent;
 import android.view.animation.Interpolator;
+import android.view.animation.LinearInterpolator;
 
 import com.beyondsw.lib.widget.rebound.SimpleSpringListener;
 import com.beyondsw.lib.widget.rebound.Spring;
@@ -34,6 +36,8 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
 
     private static final float SLOPE = 1.732f;
     private StackCardsView mSwipeView;
+    private float mCurProgress;
+    private ValueAnimator mSmoothAnimator;
     private float mLastX;
     private float mLastY;
     private float mInitDownX;
@@ -51,6 +55,7 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
     private float mChildInitX;
     private float mChildInitY;
     private float mChildInitRotation;
+    private boolean mInitPropSetted;
     private float mAnimStartX;
     private float mAnimStartY;
     private float mAnimStartRotation;
@@ -127,9 +132,13 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
         int nextIndex = index + 1;
         mTouchChild = nextIndex < mSwipeView.getChildCount() ? mSwipeView.getChildAt(nextIndex) : null;
         if (mTouchChild != null) {
-            mChildInitX = mTouchChild.getX();
-            mChildInitY = mTouchChild.getY();
-            mChildInitRotation = mTouchChild.getRotation();
+            if (!mInitPropSetted) {
+                mChildInitX = mTouchChild.getX();
+                mChildInitY = mTouchChild.getY();
+                //log(TAG, "updateTouchChild,mChildInitX=" + mChildInitX + ",mChildInitY=" + mChildInitY);
+                mChildInitRotation = mTouchChild.getRotation();
+                mInitPropSetted = true;
+            }
         }
     }
 
@@ -281,7 +290,7 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
         final View disappearView = mTouchChild;
         final float initX = mChildInitX;
         final float initY = mChildInitY;
-        mSwipeView.onDisappearStart();
+        mSwipeView.tryAppendChild();
         updateTouchChild();
         final float curX = disappearView.getX();
         final float curY = disappearView.getY();
@@ -372,6 +381,19 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
         return result;
     }
 
+    private void smoothUpdatePosition(final int index) {
+        long duration = 160 + (int) (100 * (1 - mCurProgress));
+        mSmoothAnimator = ValueAnimator.ofFloat(mCurProgress, 1).setDuration(duration);
+        mSmoothAnimator.setInterpolator(new LinearInterpolator());
+        mSmoothAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator animation) {
+                mSwipeView.updateChildrenPosition((float) animation.getAnimatedValue(), index);
+            }
+        });
+        mSmoothAnimator.start();
+    }
+
     private boolean doFastDisappear(float vx, float vy) {
         if (mTouchChild == null) {
             return false;
@@ -387,9 +409,12 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
         final float initY = mChildInitY;
 
         mDisappearingCnt++;
-        mSwipeView.updateChildrenPosition(1, getAdjustStartIndex());
-        mSwipeView.onDisappearStart();
+
+        int oldIndex = getAdjustStartIndex();
+        mSwipeView.tryAppendChild();
         updateTouchChild();
+        log(TAG, "updateTouchChild-1,mChildInitX=" + mChildInitX + ",mChildInitY=" + mChildInitY);
+        smoothUpdatePosition(oldIndex);
 
         float dx = disappearView.getX() - initX;
         float dy = disappearView.getY() - initY;
@@ -397,6 +422,7 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
         float animDx = fdxArray[0];
         float animDy = fdxArray[1];
         long duration = computeSettleDuration((int) animDx, (int) animDy, (int) vx, (int) vy);
+
         PropertyValuesHolder xp = PropertyValuesHolder.ofFloat("x", disappearView.getX() + animDx);
         PropertyValuesHolder yp = PropertyValuesHolder.ofFloat("y", disappearView.getY() + animDy);
         ObjectAnimator animator = ObjectAnimator.ofPropertyValuesHolder(disappearView, xp, yp).setDuration(duration);
@@ -484,8 +510,11 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
         int index = mSwipeView.indexOfChild(mTouchChild) + 1;
         if (distance >= dismiss_distance) {
             mSwipeView.updateChildrenPosition(1, index);
+            mCurProgress = 1;
         } else {
-            mSwipeView.updateChildrenPosition((float) distance / dismiss_distance, index);
+            final float progress = (float) distance / dismiss_distance;
+            mSwipeView.updateChildrenPosition(progress, index);
+            mCurProgress = progress;
         }
     }
 
@@ -591,11 +620,6 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
                     mIsBeingDragged = true;
                 }
                 performDrag(x - mLastX, y - mLastY);
-                final VelocityTracker velocityTracker = mVelocityTracker;
-                velocityTracker.computeCurrentVelocity(1000, mMaxVelocity);
-                float xv1 = velocityTracker.getXVelocity();
-                float yv1 = velocityTracker.getYVelocity();
-                log(TAG, "ACTION_MOVE,xv=" + xv1 + ",yv=" + yv1 + ",dx=" + (x - mLastX) + ",dy=" + (y - mLastY));
                 mLastX = x;
                 mLastY = y;
                 break;
@@ -610,7 +634,6 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
                         velocityTracker2.computeCurrentVelocity(1000, mMaxVelocity);
                         float xv = velocityTracker2.getXVelocity();
                         float yv = velocityTracker2.getYVelocity();
-                        log(TAG, "ACTION_UP,xv=" + xv + ",yv=" + yv);
                         if (doFastDisappear(xv, yv)) {
                             resetTouch();
                             break;
