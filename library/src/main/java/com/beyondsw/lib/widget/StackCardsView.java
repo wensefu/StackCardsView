@@ -104,6 +104,10 @@ public class StackCardsView extends FrameLayout {
     private float[] mAlphaArray;
     private float[] mTranslationYArray;
 
+    private int mLastLeft;
+    private int mLastTop;
+    private int mLastRight;
+    private int mLastBottom;
 
     Paint paint;
 
@@ -197,6 +201,14 @@ public class StackCardsView extends FrameLayout {
             }
             mNeedAdjustChildren = false;
         }
+        int cnt = getChildCount();
+        if (cnt > 0) {
+            View last = getChildAt(cnt - 1);
+            mLastLeft = last.getLeft();
+            mLastTop = last.getTop();
+            mLastRight = last.getRight();
+            mLastBottom = last.getBottom();
+        }
         log(TAG, "onLayout done");
     }
 
@@ -281,6 +293,19 @@ public class StackCardsView extends FrameLayout {
         }
     }
 
+    void onDisappearStart(){
+        final int childCount = getChildCount();
+        if (mAdapter.getCount() > childCount) {
+            View view = mAdapter.getView(childCount, null, StackCardsView.this);
+            addViewInLayout(view, -1, buildLayoutParams(mAdapter, childCount), true);
+            updateChildrenPosition(1, mTouchHelper.getAdjustStartIndex());
+            view.layout(mLastLeft, mLastTop, mLastRight, mLastBottom);
+            if (mTouchHelper != null) {
+                mTouchHelper.onChildAppend();
+            }
+        }
+    }
+
     void updateChildrenPosition(float progress, int startIndex) {
         if (DEBUG) {
             invalidate();
@@ -298,9 +323,10 @@ public class StackCardsView extends FrameLayout {
         float progressScale;
         for (int i = startIndex; i < cnt; i++) {
             View child = getChildAt(i);
+            int oriIndex = Math.min(mScaleArray.length-1,i - startIndex + 1);
             if (child.getVisibility() != View.GONE) {
                 if (mScaleArray != null) {
-                    oriScale = mScaleArray[i - startIndex + 1];
+                    oriScale = mScaleArray[oriIndex];
                     maxScale = mScaleArray[i - startIndex];
                     progressScale = oriScale + (maxScale - oriScale) * progress;
                     child.setScaleX(progressScale);
@@ -308,13 +334,13 @@ public class StackCardsView extends FrameLayout {
                 }
 
                 if (mAlphaArray != null) {
-                    oriAlpha = mAlphaArray[i - startIndex + 1];
+                    oriAlpha = mAlphaArray[oriIndex];
                     maxAlpha = mAlphaArray[i - startIndex];
                     child.setAlpha(oriAlpha + (maxAlpha - oriAlpha) * progress);
                 }
 
                 if (mTranslationYArray != null) {
-                    oriTranslationY = mTranslationYArray[i - startIndex + 1];
+                    oriTranslationY = mTranslationYArray[oriIndex];
                     maxTranslationY = mTranslationYArray[i - startIndex];
                     child.setTranslationY(oriTranslationY + (maxTranslationY - oriTranslationY) * progress);
                 }
@@ -418,14 +444,6 @@ public class StackCardsView extends FrameLayout {
             log(TAG, "onItemRemoved, position=" + position + ",childCnt=" + getChildCount());
             View toRemove = getChildAt(position);
             removeViewInLayout(toRemove);
-            final int childCount = getChildCount();
-            if (mAdapter.getCount() > childCount) {
-                View view = mAdapter.getView(childCount, null, StackCardsView.this);
-                addViewInLayout(view, -1, buildLayoutParams(mAdapter, childCount), true);
-            }
-            if (mTouchHelper != null) {
-                mTouchHelper.onChildRemoved();
-            }
             requestLayout();
         }
     }
