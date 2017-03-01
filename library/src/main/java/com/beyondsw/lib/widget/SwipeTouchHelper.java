@@ -27,7 +27,6 @@ import com.beyondsw.lib.widget.rebound.SpringSystem;
 public class SwipeTouchHelper implements ISwipeTouchHelper {
 
     //// TODO: 2017/2/14
-//    2，消失过程中改变alpha值
 //    6，view缓存
     // 7,多点触控处理
 
@@ -57,8 +56,6 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
     private float mAnimStartRotation;
     private SpringSystem mSpringSystem;
     private Spring mSpring;
-
-    private View mDownView;
 
     private static final int MIN_FLING_VELOCITY = 400;
 
@@ -240,10 +237,6 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
     }
 
     private void performDrag(float dx, float dy) {
-        log(TAG, "performDrag,mDownView=" + (mDownView == null ? "null" : mDownView.hashCode()) + ",mTouchChild=" + (mTouchChild == null ? "null" : mTouchChild.hashCode()));
-        if(mDownView!=mTouchChild){
-            log(TAG,"---------------performDrag err-----------------");
-        }
         if (mTouchChild == null) {
             return;
         }
@@ -589,7 +582,6 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
                 if (!mOnTouchableChild) {
                     return false;
                 }
-                mDownView = mTouchChild;
                 break;
             case MotionEvent.ACTION_MOVE:
                 //子view未消费down事件时，mIsBeingDragged为false
