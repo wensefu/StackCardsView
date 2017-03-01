@@ -107,6 +107,7 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
 
     @Override
     public void onChildChanged() {
+        mTouchChild = null;
         updateTouchChild();
     }
 
@@ -129,7 +130,7 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
         if (mTouchChild != null) {
             mChildInitX = mTouchChild.getX();
             mChildInitY = mTouchChild.getY();
-            log(TAG, "updateTouchChild,,mChildInitX=" + mChildInitX + ",mChildInitY=" + mChildInitY);
+            log(TAG, "updateTouchChild,,mChildInitX=" + mChildInitX + ",mChildInitY=" + mChildInitY + ",index=" + nextIndex + ",cnt=" + mSwipeView.getChildCount());
             mChildInitRotation = mTouchChild.getRotation();
         }
     }
@@ -406,7 +407,7 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
         animator.addListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationEnd(Animator animation) {
-                log(TAG, "doFastDisappear onAnimationEnd");
+                log(TAG, "doFastDisappear onAnimationEnd,animation=" + animation.hashCode());
                 mDisappearingCnt--;
                 mSwipeView.onCardDismissed(0); //// // FIXME
                 mSwipeView.onCoverStatusChanged(isCoverIdle());
@@ -414,7 +415,7 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
 
             @Override
             public void onAnimationStart(Animator animation) {
-                log(TAG, "doFastDisappear onAnimationStart");
+                log(TAG, "doFastDisappear onAnimationStart,animation="+animation.hashCode());
                 mSwipeView.onCoverStatusChanged(false);
             }
         });
