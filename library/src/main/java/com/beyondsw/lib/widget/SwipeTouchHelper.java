@@ -57,7 +57,7 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
     private SpringSystem mSpringSystem;
     private Spring mSpring;
 
-    private static final int MIN_FLING_VELOCITY = 400;
+    private static final int MIN_FLING_VELOCITY = 1200;
 
     public SwipeTouchHelper(StackCardsView view) {
         mSwipeView = view;
@@ -129,7 +129,6 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
         if (mTouchChild != null) {
             mChildInitX = mTouchChild.getX();
             mChildInitY = mTouchChild.getY();
-            log(TAG, "updateTouchChild,child=" + mTouchChild.hashCode() + ",scale=" + mTouchChild.getScaleX() + ",mChildInitX=" + mChildInitX + ",mChildInitY=" + mChildInitY + ",index=" + nextIndex + ",cnt=" + mSwipeView.getChildCount());
             mChildInitRotation = mTouchChild.getRotation();
         }
     }
@@ -214,7 +213,6 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
     private boolean canDrag(float dx, float dy) {
         final StackCardsView.LayoutParams lp = (StackCardsView.LayoutParams) mTouchChild.getLayoutParams();
         final int direction = lp.swipeDirection;
-        log(TAG, "canDrag,direction=" + direction + ",dx=" + dx + ",dy=" + dy);
         if (direction == StackCardsView.SWIPE_ALL) {
             return true;
         } else if (direction == 0) {
@@ -276,7 +274,6 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
     }
 
     private void doSlowDisappear() {
-        log(TAG, "doSlowDisappear");
         if (mTouchChild == null) {
             return;
         }
@@ -379,13 +376,12 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
         if (mTouchChild == null) {
             return false;
         }
-        if (Math.abs(vx) < mMinFastDisappearVelocity && Math.abs(vy) < mMinFastDisappearVelocity) {
+        if (vx * vx + vy * vy < mMinFastDisappearVelocity * mMinFastDisappearVelocity) {
             return false;
         }
         if (!isVDirectionAllowDismiss(vx, vx)) {
             return false;
         }
-        log(TAG, "doFastDisappear");
         final View disappearView = mTouchChild;
         final float initX = mChildInitX;
         final float initY = mChildInitY;
@@ -408,7 +404,6 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
         animator.addListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationEnd(Animator animation) {
-                log(TAG, "doFastDisappear onAnimationEnd,animation=" + animation.hashCode());
                 mDisappearingCnt--;
                 mSwipeView.onCardDismissed(0); //// // FIXME
                 mSwipeView.onCoverStatusChanged(isCoverIdle());
@@ -416,7 +411,6 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
 
             @Override
             public void onAnimationStart(Animator animation) {
-                log(TAG, "doFastDisappear onAnimationStart,animation="+animation.hashCode());
                 mSwipeView.onCoverStatusChanged(false);
             }
         });
@@ -447,8 +441,8 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
         final float yweight = yvel != 0 ? (float) absYVel / addedVel :
                 (float) absDy / addedDistance;
 
-        int xduration = computeAxisDuration(dx, xvel, 1024);
-        int yduration = computeAxisDuration(dy, yvel, 1024);
+        int xduration = computeAxisDuration(dx, xvel, 256);
+        int yduration = computeAxisDuration(dy, yvel, 256);
         return (int) (xduration * xweight + yduration * yweight);
     }
 
@@ -467,7 +461,7 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
         int duration;
         velocity = Math.abs(velocity);
         if (velocity > 0) {
-            duration = 4 * Math.round(1000 * Math.abs(distance / velocity));
+            duration = 4 * Math.round(2400 * Math.abs(distance / velocity));
         } else {
             final float range = (float) Math.abs(delta) / motionRange;
             duration = (int) ((range + 1) * 256);
@@ -597,6 +591,11 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
                     mIsBeingDragged = true;
                 }
                 performDrag(x - mLastX, y - mLastY);
+                final VelocityTracker velocityTracker = mVelocityTracker;
+                velocityTracker.computeCurrentVelocity(1000, mMaxVelocity);
+                float xv1 = velocityTracker.getXVelocity();
+                float yv1 = velocityTracker.getYVelocity();
+                log(TAG, "ACTION_MOVE,xv=" + xv1 + ",yv=" + yv1 + ",dx=" + (x - mLastX) + ",dy=" + (y - mLastY));
                 mLastX = x;
                 mLastY = y;
                 break;
@@ -607,10 +606,11 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
                 if (mIsBeingDragged) {
                     final StackCardsView.LayoutParams lp = (StackCardsView.LayoutParams) mTouchChild.getLayoutParams();
                     if (lp.fastDismissAllowed) {
-                        final VelocityTracker velocityTracker = mVelocityTracker;
-                        velocityTracker.computeCurrentVelocity(1000, mMaxVelocity);
-                        float xv = mVelocityTracker.getXVelocity();
-                        float yv = mVelocityTracker.getYVelocity();
+                        final VelocityTracker velocityTracker2 = mVelocityTracker;
+                        velocityTracker2.computeCurrentVelocity(1000, mMaxVelocity);
+                        float xv = velocityTracker2.getXVelocity();
+                        float yv = velocityTracker2.getYVelocity();
+                        log(TAG, "ACTION_UP,xv=" + xv + ",yv=" + yv);
                         if (doFastDisappear(xv, yv)) {
                             resetTouch();
                             break;
