@@ -298,8 +298,8 @@ public class StackCardsView extends FrameLayout {
         if (mAdapter.getCount() > childCount) {
             View view = mAdapter.getView(childCount, null, StackCardsView.this);
             addViewInLayout(view, -1, buildLayoutParams(mAdapter, childCount), true);
-            updateChildrenPosition(1, mTouchHelper.getAdjustStartIndex());
             view.layout(mLastLeft, mLastTop, mLastRight, mLastBottom);
+            updateChildrenPosition(1, mTouchHelper.getAdjustStartIndex());
             if (mTouchHelper != null) {
                 mTouchHelper.onChildAppend();
             }
