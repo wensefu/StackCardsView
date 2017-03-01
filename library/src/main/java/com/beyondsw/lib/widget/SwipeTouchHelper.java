@@ -291,6 +291,7 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
         final View disappearView = mTouchChild;
         final float initX = mChildInitX;
         final float initY = mChildInitY;
+        mSwipeView.onDisappearStart();
         updateTouchChild();
         final float curX = disappearView.getX();
         final float curY = disappearView.getY();
