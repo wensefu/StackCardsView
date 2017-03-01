@@ -58,6 +58,8 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
     private SpringSystem mSpringSystem;
     private Spring mSpring;
 
+    private View mDownView;
+
     private static final int MIN_FLING_VELOCITY = 400;
 
     public SwipeTouchHelper(StackCardsView view) {
@@ -130,7 +132,7 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
         if (mTouchChild != null) {
             mChildInitX = mTouchChild.getX();
             mChildInitY = mTouchChild.getY();
-            log(TAG, "updateTouchChild,,mChildInitX=" + mChildInitX + ",mChildInitY=" + mChildInitY + ",index=" + nextIndex + ",cnt=" + mSwipeView.getChildCount());
+            log(TAG, "updateTouchChild,child=" + mTouchChild.hashCode() + ",scale=" + mTouchChild.getScaleX() + ",mChildInitX=" + mChildInitX + ",mChildInitY=" + mChildInitY + ",index=" + nextIndex + ",cnt=" + mSwipeView.getChildCount());
             mChildInitRotation = mTouchChild.getRotation();
         }
     }
@@ -238,6 +240,10 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
     }
 
     private void performDrag(float dx, float dy) {
+        log(TAG, "performDrag,mDownView=" + (mDownView == null ? "null" : mDownView.hashCode()) + ",mTouchChild=" + (mTouchChild == null ? "null" : mTouchChild.hashCode()));
+        if(mDownView!=mTouchChild){
+            log(TAG,"---------------performDrag err-----------------");
+        }
         if (mTouchChild == null) {
             return;
         }
@@ -391,6 +397,7 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
         final float initY = mChildInitY;
 
         mDisappearingCnt++;
+        mSwipeView.updateChildrenPosition(1, getAdjustStartIndex());
         mSwipeView.onDisappearStart();
         updateTouchChild();
 
@@ -581,6 +588,7 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
                 if (!mOnTouchableChild) {
                     return false;
                 }
+                mDownView = mTouchChild;
                 break;
             case MotionEvent.ACTION_MOVE:
                 //子view未消费down事件时，mIsBeingDragged为false

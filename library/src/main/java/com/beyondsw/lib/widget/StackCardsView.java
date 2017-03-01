@@ -295,11 +295,11 @@ public class StackCardsView extends FrameLayout {
 
     void onDisappearStart(){
         final int childCount = getChildCount();
+        log(TAG, "onDisappearStart,mAdapter.getCount()=" + mAdapter.getCount() + ",childCount=" + childCount);
         if (mAdapter.getCount() > childCount) {
             View view = mAdapter.getView(childCount, null, StackCardsView.this);
             addViewInLayout(view, -1, buildLayoutParams(mAdapter, childCount), true);
             view.layout(mLastLeft, mLastTop, mLastRight, mLastBottom);
-            updateChildrenPosition(1, mTouchHelper.getAdjustStartIndex());
             if (mTouchHelper != null) {
                 mTouchHelper.onChildAppend();
             }
@@ -311,7 +311,9 @@ public class StackCardsView extends FrameLayout {
             invalidate();
         }
         final int cnt = getChildCount();
+        log(TAG, "updateChildrenPosition,startIndex=" + startIndex + ",cnt=" + cnt);
         if (startIndex >= cnt || startIndex < 1) {
+            log(TAG, "--------------updateChildrenPosition err-------------------");
             return;
         }
         float oriScale;
@@ -329,6 +331,9 @@ public class StackCardsView extends FrameLayout {
                     oriScale = mScaleArray[oriIndex];
                     maxScale = mScaleArray[i - startIndex];
                     progressScale = oriScale + (maxScale - oriScale) * progress;
+                    if (i == startIndex) {
+                        log(TAG, "updateChildrenPosition,startIndex=" + startIndex + ",progress="+progress+",scale=" + progressScale);
+                    }
                     child.setScaleX(progressScale);
                     child.setScaleY(progressScale);
                 }
