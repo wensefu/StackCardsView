@@ -37,7 +37,7 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
     private static final float SLOPE = 1.732f;
     private StackCardsView mSwipeView;
     private float mCurProgress;
-    private ValueAnimator mSmoothAnimator;
+    private ValueAnimator mSmoothUpdater;
     private float mLastX;
     private float mLastY;
     private float mInitDownX;
@@ -247,6 +247,9 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
         if (mTouchChild == null) {
             return;
         }
+        if (mSmoothUpdater != null && mSmoothUpdater.isRunning()) {
+            mSmoothUpdater.end();
+        }
         mTouchChild.setX(mTouchChild.getX() + dx);
         mTouchChild.setY(mTouchChild.getY() + dy);
         final StackCardsView.LayoutParams lp = (StackCardsView.LayoutParams) mTouchChild.getLayoutParams();
@@ -381,17 +384,17 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
         return result;
     }
 
-    private void smoothUpdatePosition(final int index) {
+    private void smoothUpdatePosition(final View startView) {
         long duration = 160 + (int) (100 * (1 - mCurProgress));
-        mSmoothAnimator = ValueAnimator.ofFloat(mCurProgress, 1).setDuration(duration);
-        mSmoothAnimator.setInterpolator(new LinearInterpolator());
-        mSmoothAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+        mSmoothUpdater = ValueAnimator.ofFloat(mCurProgress, 1).setDuration(duration);
+        mSmoothUpdater.setInterpolator(new LinearInterpolator());
+        mSmoothUpdater.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
             @Override
             public void onAnimationUpdate(ValueAnimator animation) {
-                mSwipeView.updateChildrenPosition((float) animation.getAnimatedValue(), index);
+                mSwipeView.updateChildrenPosition((float) animation.getAnimatedValue(), mSwipeView.indexOfChild(startView));
             }
         });
-        mSmoothAnimator.start();
+        mSmoothUpdater.start();
     }
 
     private boolean doFastDisappear(float vx, float vy) {
@@ -404,17 +407,16 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
         if (!isVDirectionAllowDismiss(vx, vx)) {
             return false;
         }
+        log(TAG, "doFastDisappear");
         final View disappearView = mTouchChild;
         final float initX = mChildInitX;
         final float initY = mChildInitY;
 
         mDisappearingCnt++;
 
-        int oldIndex = getAdjustStartIndex();
         mSwipeView.tryAppendChild();
         updateTouchChild();
-        log(TAG, "updateTouchChild-1,mChildInitX=" + mChildInitX + ",mChildInitY=" + mChildInitY);
-        smoothUpdatePosition(oldIndex);
+        smoothUpdatePosition(mTouchChild);
 
         float dx = disappearView.getX() - initX;
         float dy = disappearView.getY() - initY;

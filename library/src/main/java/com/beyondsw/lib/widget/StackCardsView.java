@@ -292,7 +292,7 @@ public class StackCardsView extends FrameLayout {
         }
     }
 
-    void tryAppendChild(){
+    void tryAppendChild() {
         final int childCount = getChildCount();
         if (mAdapter.getCount() > childCount) {
             View view = mAdapter.getView(childCount, null, StackCardsView.this);
@@ -309,9 +309,7 @@ public class StackCardsView extends FrameLayout {
             invalidate();
         }
         final int cnt = getChildCount();
-        if (startIndex >= cnt || startIndex < 1) {
-            return;
-        }
+        log(TAG, "updateChildrenPosition,startIndex=" + startIndex + ",cnt=" + cnt);
         float oriScale;
         float oriAlpha;
         float oriTranslationY;
@@ -321,7 +319,11 @@ public class StackCardsView extends FrameLayout {
         float progressScale;
         for (int i = startIndex; i < cnt; i++) {
             View child = getChildAt(i);
-            int oriIndex = Math.min(mScaleArray.length-1,i - startIndex + 1);
+            if (child == null) {
+                log(TAG, "updateChildrenPosition: err,child=null");
+                return;
+            }
+            int oriIndex = Math.min(mScaleArray.length - 1, i - startIndex + 1);
             if (child.getVisibility() != View.GONE) {
                 if (mScaleArray != null) {
                     oriScale = mScaleArray[oriIndex];
@@ -334,7 +336,7 @@ public class StackCardsView extends FrameLayout {
                 if (mAlphaArray != null) {
                     oriAlpha = mAlphaArray[oriIndex];
                     maxAlpha = mAlphaArray[i - startIndex];
-                    child.setAlpha(oriAlpha + (maxAlpha - oriAlpha) * progress * 1.5f);
+                    child.setAlpha(oriAlpha + (maxAlpha - oriAlpha) * progress);
                 }
 
                 if (mTranslationYArray != null) {
