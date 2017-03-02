@@ -629,23 +629,21 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
                 break;
             case MotionEvent.ACTION_CANCEL:
             case MotionEvent.ACTION_UP:
-                if (mIsBeingDragged) {
-                    final StackCardsView.LayoutParams lp = (StackCardsView.LayoutParams) mTouchChild.getLayoutParams();
-                    if (lp.fastDismissAllowed) {
-                        final VelocityTracker velocityTracker2 = mVelocityTracker;
-                        velocityTracker2.computeCurrentVelocity(1000, mMaxVelocity);
-                        float xv = velocityTracker2.getXVelocity();
-                        float yv = velocityTracker2.getYVelocity();
-                        if (doFastDisappear(xv, yv)) {
-                            resetTouch();
-                            break;
-                        }
+                final StackCardsView.LayoutParams lp = (StackCardsView.LayoutParams) mTouchChild.getLayoutParams();
+                if (lp.fastDismissAllowed) {
+                    final VelocityTracker velocityTracker2 = mVelocityTracker;
+                    velocityTracker2.computeCurrentVelocity(1000, mMaxVelocity);
+                    float xv = velocityTracker2.getXVelocity();
+                    float yv = velocityTracker2.getYVelocity();
+                    if (doFastDisappear(xv, yv)) {
+                        resetTouch();
+                        break;
                     }
-                    if (isDistanceAllowDismiss() && isDirectionAllowDismiss()) {
-                        doSlowDisappear();
-                    } else {
-                        animateToInitPos();
-                    }
+                }
+                if (isDistanceAllowDismiss() && isDirectionAllowDismiss()) {
+                    doSlowDisappear();
+                } else {
+                    animateToInitPos();
                 }
                 resetTouch();
                 mSwipeView.onCoverStatusChanged(isCoverIdle());
