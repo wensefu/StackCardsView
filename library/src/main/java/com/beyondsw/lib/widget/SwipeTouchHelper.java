@@ -28,9 +28,6 @@ import com.beyondsw.lib.widget.rebound.SpringSystem;
  */
 public class SwipeTouchHelper implements ISwipeTouchHelper {
 
-    //// TODO: 2017/2/14
-//    6，view缓存
-
     private static final String TAG = "StackCardsView-touch";
 
     private static final float SLOPE = 1.732f;
