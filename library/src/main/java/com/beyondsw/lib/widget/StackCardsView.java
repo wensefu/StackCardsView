@@ -1,13 +1,12 @@
 package com.beyondsw.lib.widget;
 
 import android.content.Context;
+import android.content.res.TypedArray;
 import android.database.Observable;
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Paint;
-import android.graphics.Rect;
 import android.util.AttributeSet;
+import android.util.DisplayMetrics;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
@@ -61,38 +60,52 @@ public class StackCardsView extends FrameLayout {
     private Adapter mAdapter;
 
     /**
-     * 静止时最多可以看到的卡片数
+     * 默认静止时最多可以看到的卡片数
      */
-    private int mMaxVisibleCnt = 3;
+    private static final int MAX_VISIBLE_CNT = 3;
 
     /**
-     * 同时最多add到控件的子view数
+     * 默认层叠效果高度(dp)
      */
-    private int mMaxLayerCnt = 4;
+    private static final int EDGE_HEIGHT = 8;
 
     /**
-     * 层叠效果高度
+     * 默认相对前一张卡片的缩放比例
      */
-    private int mLayerEdgeHeight = 24;
+    private static final float SCALE_FACTOR = .8f;
+
+    /**
+     * 默认相对前一张卡片的透明度比例
+     */
+    private static final float ALPHA_FACTOR = .6f;
+
+    /**
+     * 默认可以消失的滑动距离与控件宽度比
+     */
+    private static final float DISMISS_FACTOR = .4f;
+
+    /**
+     * 默认卡片消失时的透明度
+     */
+    private static final float DISMISS_ALPHA = .3f;
+
+    /**
+     * 默认drag灵敏度参数，值越大越灵敏
+     */
+    private static final float DRAG_SENSITIVITY = 1f;
+
+    private int mMaxVisibleCnt;
+    private float mScaleFactor;
+    private float mAlphaFactor;
+    private float mDismissFactor;
+    private int mLayerEdgeHeight;
+    private float mDismissAlpha;
+    private float mDragSensitivity;
+    private float mDismissDistance;
 
     private InnerDataObserver mDataObserver;
     private boolean mHasRegisteredObserver;
 
-    private static final float SCALE_FACTOR = 0.8f;
-    private float mScaleFactor = SCALE_FACTOR;
-
-    private static final float ALPHA_FACTOR = 0.6f;
-    private float mAlphaFactor = ALPHA_FACTOR;
-
-    private static final float SWIPE_TO_DISMISS_FACTOR = .3f;
-    private float mDismissFactor = SWIPE_TO_DISMISS_FACTOR;
-    private float mDismissDistance;
-
-    //卡片消失时的透明度
-    private static final float DISMISS_ALPHA = 0.3f;
-    private float mDismissAlpha = DISMISS_ALPHA;
-    private static final float DRAG_SENSITIVITY = 1f;
-    private float mDragSensitivity = DRAG_SENSITIVITY;
     private ISwipeTouchHelper mTouchHelper;
     private List<OnCardSwipedListener> mCardSwipedListenrs;
 
@@ -109,22 +122,32 @@ public class StackCardsView extends FrameLayout {
     private int mLastRight;
     private int mLastBottom;
 
-    Paint paint;
-
     public StackCardsView(Context context) {
         this(context, null);
     }
 
     public StackCardsView(Context context, AttributeSet attrs) {
-        super(context, attrs);
-        setChildrenDrawingOrderEnabled(true);
+        this(context, attrs, 0);
+    }
 
-        if (DEBUG) {
-            paint = new Paint();
-            paint.setColor(Color.BLUE);
-            paint.setStyle(Paint.Style.STROKE);
-            paint.setStrokeWidth(10);
-        }
+    public StackCardsView(Context context, AttributeSet attrs, int defStyleAttr) {
+        super(context, attrs, defStyleAttr);
+        setChildrenDrawingOrderEnabled(true);
+        final TypedArray a = context.obtainStyledAttributes(attrs,
+                R.styleable.StackCardsView, defStyleAttr, 0);
+        mMaxVisibleCnt = a.getInt(R.styleable.StackCardsView_maxVisibleCnt, MAX_VISIBLE_CNT);
+        mScaleFactor = a.getFloat(R.styleable.StackCardsView_scaleFactor, SCALE_FACTOR);
+        mAlphaFactor = a.getFloat(R.styleable.StackCardsView_alphaFactor, ALPHA_FACTOR);
+        mDismissFactor = a.getFloat(R.styleable.StackCardsView_dismissFactor, DISMISS_FACTOR);
+        mLayerEdgeHeight = a.getDimensionPixelSize(R.styleable.StackCardsView_edgeHeight, (int) dp2px(context, EDGE_HEIGHT));
+        mDismissAlpha = a.getFloat(R.styleable.StackCardsView_dismissAlpha, DISMISS_ALPHA);
+        mDragSensitivity = a.getFloat(R.styleable.StackCardsView_dragSensitivity, DRAG_SENSITIVITY);
+        a.recycle();
+    }
+
+    public static float dp2px(Context context, float dp) {
+        DisplayMetrics dm = context.getResources().getDisplayMetrics();
+        return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp, dm);
     }
 
     public interface OnCardSwipedListener {
@@ -184,15 +207,12 @@ public class StackCardsView extends FrameLayout {
         return mDismissDistance;
     }
 
-    @Override
-    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-        log(TAG, "onMeasure");
+    float getDismissAlpha() {
+        return mDismissAlpha;
     }
 
     @Override
     protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
-        log(TAG, "onLayout start,mNeedAdjustChildren=" + mNeedAdjustChildren);
         super.onLayout(changed, left, top, right, bottom);
         if (mNeedAdjustChildren) {
             adjustChildren();
@@ -209,7 +229,6 @@ public class StackCardsView extends FrameLayout {
             mLastRight = last.getRight();
             mLastBottom = last.getBottom();
         }
-        log(TAG, "onLayout done");
     }
 
     private void adjustChildren() {
@@ -268,27 +287,6 @@ public class StackCardsView extends FrameLayout {
             for (OnCardSwipedListener listener : mCardSwipedListenrs) {
                 listener.onCardDismiss(direction);
             }
-        }
-    }
-
-    Rect rect = new Rect();
-
-
-    @Override
-    protected void dispatchDraw(Canvas canvas) {
-        super.dispatchDraw(canvas);
-        if (DEBUG) {
-//            if (mTouchHelper!=null && getChildCount() > 1) {
-//                View cover = getChildAt(1);
-//                cover.getHitRect(rect);
-////                paint.setColor(Color.RED);
-////                canvas.drawLine(0, cover.getY(), getWidth(), cover.getY(), paint);
-////                canvas.drawLine(cover.getX(), 0, cover.getX(), getHeight(), paint);
-////                canvas.drawLine(0, cover.getY() + cover.getHeight(), getWidth(), cover.getY() + cover.getHeight(), paint);
-////                canvas.drawLine(cover.getX() + cover.getWidth(), 0, cover.getX() + cover.getWidth(), getHeight(), paint);
-////                paint.setColor(Color.GREEN);
-//                canvas.drawRect(rect, paint);
-//            }
         }
     }
 
@@ -390,20 +388,18 @@ public class StackCardsView extends FrameLayout {
     }
 
     private void initChildren() {
-        log(TAG, "initChildren start");
         int cnt = mAdapter == null ? 0 : mAdapter.getCount();
         if (cnt == 0) {
             removeAllViewsInLayout();
         } else {
             removeAllViewsInLayout();
-            cnt = Math.min(cnt, mMaxLayerCnt);
+            cnt = Math.min(cnt, mMaxVisibleCnt + 1);
             for (int i = 0; i < cnt; i++) {
                 addViewInLayout(mAdapter.getView(i, null, this), -1, buildLayoutParams(mAdapter, i), true);
             }
         }
         mNeedAdjustChildren = true;
         requestLayout();
-        log(TAG, "initChildren end");
     }
 
     public void setAdapter(Adapter adapter) {
@@ -419,7 +415,6 @@ public class StackCardsView extends FrameLayout {
         public void onDataSetChanged() {
             super.onDataSetChanged();
             if (mTouchHelper != null && !mTouchHelper.isCoverIdle()) {
-                log(TAG, "onDataSetChanged, touch busy");
                 mPendingTask = new Runnable() {
                     @Override
                     public void run() {
@@ -427,7 +422,6 @@ public class StackCardsView extends FrameLayout {
                     }
                 };
             } else {
-                log(TAG, "onDataSetChanged, touch idle");
                 initChildren();
             }
         }
@@ -440,7 +434,6 @@ public class StackCardsView extends FrameLayout {
 
         @Override
         public void onItemRemoved(int position) {
-            log(TAG, "onItemRemoved, position=" + position + ",childCnt=" + getChildCount());
             View toRemove = getChildAt(position);
             removeViewInLayout(toRemove);
             requestLayout();
