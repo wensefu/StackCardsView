@@ -303,9 +303,6 @@ public class StackCardsView extends FrameLayout {
     }
 
     void updateChildrenPosition(float progress, int startIndex) {
-        if (DEBUG) {
-            invalidate();
-        }
         final int cnt = getChildCount();
         float oriScale;
         float oriAlpha;
