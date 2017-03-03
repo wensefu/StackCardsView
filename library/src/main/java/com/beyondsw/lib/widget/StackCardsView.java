@@ -107,7 +107,7 @@ public class StackCardsView extends FrameLayout {
     private boolean mHasRegisteredObserver;
 
     private ISwipeTouchHelper mTouchHelper;
-    private List<OnCardSwipedListener> mCardSwipedListenrs;
+    private List<OnCardSwipedListener> mCardSwipedListeners;
 
     private boolean mNeedAdjustChildren;
 
@@ -156,17 +156,17 @@ public class StackCardsView extends FrameLayout {
     }
 
     public void addOnCardSwipedListener(OnCardSwipedListener listener) {
-        if (mCardSwipedListenrs == null) {
-            mCardSwipedListenrs = new ArrayList<>();
-            mCardSwipedListenrs.add(listener);
-        } else if (!mCardSwipedListenrs.contains(listener)) {
-            mCardSwipedListenrs.add(listener);
+        if (mCardSwipedListeners == null) {
+            mCardSwipedListeners = new ArrayList<>();
+            mCardSwipedListeners.add(listener);
+        } else if (!mCardSwipedListeners.contains(listener)) {
+            mCardSwipedListeners.add(listener);
         }
     }
 
     public void removeOnCardSwipedListener(OnCardSwipedListener listener) {
-        if (mCardSwipedListenrs != null && mCardSwipedListenrs.contains(listener)) {
-            mCardSwipedListenrs.remove(listener);
+        if (mCardSwipedListeners != null && mCardSwipedListeners.contains(listener)) {
+            mCardSwipedListeners.remove(listener);
         }
     }
 
@@ -283,8 +283,8 @@ public class StackCardsView extends FrameLayout {
     }
 
     void onCardDismissed(int direction) {
-        if (mCardSwipedListenrs != null) {
-            for (OnCardSwipedListener listener : mCardSwipedListenrs) {
+        if (mCardSwipedListeners != null) {
+            for (OnCardSwipedListener listener : mCardSwipedListeners) {
                 listener.onCardDismiss(direction);
             }
         }
