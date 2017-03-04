@@ -4,7 +4,6 @@
     android:layout_height="wrap_content"
               android:background="@android:color/holo_orange_dark"
               android:gravity="center"
-    android:translationX="-8dp"
     >
 
    <TextView

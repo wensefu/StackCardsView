@@ -77,7 +77,7 @@ public class StackCardsView extends FrameLayout {
     /**
      * 默认相对前一张卡片的透明度比例
      */
-    private static final float ALPHA_FACTOR = .6f;
+    private static final float ALPHA_FACTOR = .8f;
 
     /**
      * 默认可以消失的滑动距离与控件宽度比
@@ -89,11 +89,11 @@ public class StackCardsView extends FrameLayout {
      */
     private static final float DISMISS_ALPHA = .3f;
 
-    /**
-     * 默认drag灵敏度参数，值越大越灵敏
-     */
-    private static final float DRAG_SENSITIVITY = 1f;
+    private static final float DRAG_SENSITIVITY = 2f;
 
+    private static final int INVALID_SIZE = Integer.MIN_VALUE;
+    private int mItemWidth;
+    private int mItemHeight;
     private int mMaxVisibleCnt;
     private float mScaleFactor;
     private float mAlphaFactor;
@@ -135,6 +135,14 @@ public class StackCardsView extends FrameLayout {
         setChildrenDrawingOrderEnabled(true);
         final TypedArray a = context.obtainStyledAttributes(attrs,
                 R.styleable.StackCardsView, defStyleAttr, 0);
+        mItemWidth = a.getDimensionPixelSize(R.styleable.StackCardsView_itemWidth, INVALID_SIZE);
+        if (mItemWidth == INVALID_SIZE) {
+            throw new IllegalArgumentException("itemWidth must be specified");
+        }
+        mItemHeight = a.getDimensionPixelSize(R.styleable.StackCardsView_itemHeight, INVALID_SIZE);
+        if (mItemHeight == INVALID_SIZE) {
+            throw new IllegalArgumentException("itemWidth must be specified");
+        }
         mMaxVisibleCnt = a.getInt(R.styleable.StackCardsView_maxVisibleCnt, MAX_VISIBLE_CNT);
         mScaleFactor = a.getFloat(R.styleable.StackCardsView_scaleFactor, SCALE_FACTOR);
         mAlphaFactor = a.getFloat(R.styleable.StackCardsView_alphaFactor, ALPHA_FACTOR);
@@ -372,12 +380,14 @@ public class StackCardsView extends FrameLayout {
         if (mDataObserver == null) {
             mDataObserver = new InnerDataObserver();
         }
-        mAdapter.registerDataObserver(mDataObserver);
-        mHasRegisteredObserver = true;
+        if (mAdapter != null) {
+            mAdapter.registerDataObserver(mDataObserver);
+            mHasRegisteredObserver = true;
+        }
     }
 
-    private static LayoutParams buildLayoutParams(Adapter adapter, int position) {
-        return new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT, Gravity.CENTER)
+    private  LayoutParams buildLayoutParams(Adapter adapter, int position) {
+        return new LayoutParams(mItemWidth, mItemHeight, Gravity.CENTER)
                 .swipeDirection(adapter.getSwipeDirection(position))
                 .dismissDirection(adapter.getDismissDirection(position))
                 .fastDismissAllowed(adapter.isFastDismissAllowed(position))

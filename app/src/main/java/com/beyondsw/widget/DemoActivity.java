@@ -1,14 +1,13 @@
 package com.beyondsw.widget;
 
 import android.os.Bundle;
-import android.support.v4.view.PagerAdapter;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
-import android.view.ViewGroup;
-
-import com.beyondsw.lib.widget.StackCardsView;
 
 /**
  * Created by wensefu on 2017/2/12.
@@ -19,18 +18,21 @@ public class DemoActivity extends AppCompatActivity {
     private static final String TAG = "DemoActivity";
 
     private ViewPager mPager;
-    private StackCardsView stackCardsView;
+    private Fragment mSettingFragment;
+    private Fragment mCardFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
-        mPager = (ViewPager) findViewById(R.id.viewpager);
-        mPager.setAdapter(new MyPagerAdapter());
+        mSettingFragment = new SettingFragment();
+        mCardFragment = new CardFragment();
+        mPager = Utils.findViewById(this,R.id.viewpager);
+        mPager.setAdapter(new MyPagerAdapter(getSupportFragmentManager()));
         mPager.setPageTransformer(false, new MyPageTransformer());
     }
 
-    private static class MyPageTransformer implements ViewPager.PageTransformer{
+    private static class MyPageTransformer implements ViewPager.PageTransformer {
 
         @Override
         public void transformPage(View page, float position) {
@@ -38,50 +40,20 @@ public class DemoActivity extends AppCompatActivity {
         }
     }
 
-    private class MyPagerAdapter extends PagerAdapter implements StackCardsView.OnCardSwipedListener {
+    private class MyPagerAdapter extends FragmentPagerAdapter {
 
-        private CardAdapter adapter;
-
-
-        @Override
-        public Object instantiateItem(ViewGroup container, int position) {
-            View pageView;
-            if (position == 0) {
-                pageView = View.inflate(DemoActivity.this, R.layout.page1, null);
-                stackCardsView = (StackCardsView) pageView.findViewById(R.id.cards);
-                stackCardsView.addOnCardSwipedListener(this);
-                adapter = new CardAdapter();
-                stackCardsView.setAdapter(adapter);
-            } else {
-                pageView = View.inflate(DemoActivity.this, R.layout.page2, null);
-            }
-            container.addView(pageView);
-            return pageView;
+        public MyPagerAdapter(FragmentManager fm) {
+            super(fm);
         }
 
         @Override
-        public void destroyItem(ViewGroup container, int position, Object object) {
-            if (position == 0) {
-                stackCardsView.removeOnCardSwipedListener(this);
-                stackCardsView = null;
-                adapter = null;
-            }
-            container.removeView((View) object);
+        public Fragment getItem(int position) {
+            return position == 0 ? mSettingFragment : mCardFragment;
         }
 
         @Override
         public int getCount() {
             return 2;
-        }
-
-        @Override
-        public boolean isViewFromObject(View view, Object object) {
-            return view == object;
-        }
-
-        @Override
-        public void onCardDismiss(int direction) {
-
         }
     }
 }

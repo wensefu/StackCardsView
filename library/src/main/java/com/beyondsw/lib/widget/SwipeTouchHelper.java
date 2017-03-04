@@ -566,7 +566,6 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
         }
         final View touchChild = mTouchChild;
         final int action = ev.getAction() & MotionEvent.ACTION_MASK;
-        //log(TAG, "onInterceptTouchEvent action=" + action);
         if (action == MotionEvent.ACTION_DOWN) {
             clearVelocityTracker();
         }
@@ -578,7 +577,6 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
         }
         switch (action) {
             case MotionEvent.ACTION_DOWN: {
-                log(TAG, "onInterceptTouchEvent ACTION_DOWN");
                 float x = ev.getX();
                 float y = ev.getY();
                 if (!(mOnTouchableChild = isTouchOnView(touchChild, x, y))) {
@@ -593,9 +591,7 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
                 break;
             }
             case MotionEvent.ACTION_MOVE: {
-                log(TAG, "onInterceptTouchEvent ACTION_MOVE,mActivePointerId=" + mActivePointerId);
                 if (mActivePointerId == INVALID_POINTER) {
-                    log(TAG, "onInterceptTouchEvent ACTION_MOVE,INVALID_POINTER");
                     break;
                 }
                 int pointerIndex = ev.findPointerIndex(mActivePointerId);
@@ -605,7 +601,7 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
                 float dy = y - mInitDownY;
                 mLastX = x;
                 mLastY = y;
-                if (dx * dx + dy * dy > mDragSlop * mDragSlop && canDrag(dx, dy)) {
+                if ((Math.abs(dx) > mDragSlop || (Math.abs(dy) > mDragSlop)) && canDrag(dx, dy)) {
                     mIsBeingDragged = true;
                 }
                 break;
@@ -627,13 +623,13 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
                 break;
             }
         }
+        log(TAG, "onInterceptTouchEvent action=" + action+",mIsBeingDragged="+mIsBeingDragged);
         return mIsBeingDragged;
     }
 
     @Override
     public boolean onTouchEvent(MotionEvent ev) {
         final int action = ev.getAction() & MotionEvent.ACTION_MASK;
-        //log(TAG, "onTouchEvent action=" + action + ",mOnTouchableChild=" + mOnTouchableChild + ",mIsBeingDragged=" + mIsBeingDragged);
         if (mTouchChild == null) {
             return false;
         }
@@ -660,7 +656,7 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
                     cancelSpringIfNeeded();
                     float dx = x - mInitDownX;
                     float dy = y - mInitDownY;
-                    if (dx * dx + dy * dy <= mDragSlop * mDragSlop || !canDrag(dx, dy)) {
+                    if ((Math.abs(dx) <= mDragSlop && (Math.abs(dy) <= mDragSlop)) || !canDrag(dx, dy)) {
                         mLastX = x;
                         mLastY = y;
                         return false;

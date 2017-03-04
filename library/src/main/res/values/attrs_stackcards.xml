@@ -8,5 +8,7 @@
         <attr name="dismissFactor" format="float"/>
         <attr name="dismissAlpha" format="float"/>
         <attr name="dragSensitivity" format="float"/>
+        <attr name="itemWidth" format="dimension"/>
+        <attr name="itemHeight" format="dimension"/>
     </declare-styleable>
 </resources>

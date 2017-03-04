@@ -5,6 +5,7 @@ import android.view.ViewGroup;
 
 import com.beyondsw.lib.widget.StackCardsView;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -12,13 +13,24 @@ import java.util.List;
  */
 public class CardAdapter extends StackCardsView.Adapter {
 
-    private List<? extends BaseCardItem> mItems;
+    private List<BaseCardItem> mItems;
 
-    public void setItems(List<BaseCardItem> items) {
-        mItems = items;
+    public void appendItems(List<BaseCardItem> items){
+        int size = items == null ? 0 : items.size();
+        if (size == 0) {
+            return;
+        }
+        if (mItems == null) {
+            mItems = new ArrayList<>(size);
+        }
+        mItems.addAll(items);
         notifyDataSetChanged();
     }
 
+    public void remove(int position){
+        mItems.remove(position);
+        notifyItemRemoved(position);
+    }
 
     @Override
     public int getCount() {
@@ -33,17 +45,7 @@ public class CardAdapter extends StackCardsView.Adapter {
     @Override
     public int getSwipeDirection(int position) {
         BaseCardItem item = mItems.get(position);
-        if (item instanceof ImageCardItem) {
-            return StackCardsView.SWIPE_ALL;
-        } else if (item instanceof ScrollCardItem) {
-            int direction = ((ScrollCardItem) item).direction;
-            if (direction == ScrollCardItem.HORIZONTAL) {
-                return StackCardsView.SWIPE_UP | StackCardsView.SWIPE_DOWN;
-            } else {
-                return StackCardsView.SWIPE_LEFT | StackCardsView.SWIPE_RIGHT;
-            }
-        }
-        return super.getSwipeDirection(position);
+        return item.swipeDir;
     }
 
     @Override
@@ -60,6 +62,7 @@ public class CardAdapter extends StackCardsView.Adapter {
 
     @Override
     public int getMaxRotation(int position) {
-        return 8;
+        BaseCardItem item = mItems.get(position);
+        return item.maxRotation;
     }
 }
