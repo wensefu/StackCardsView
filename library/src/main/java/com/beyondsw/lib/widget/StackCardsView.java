@@ -141,7 +141,7 @@ public class StackCardsView extends FrameLayout {
         }
         mItemHeight = a.getDimensionPixelSize(R.styleable.StackCardsView_itemHeight, INVALID_SIZE);
         if (mItemHeight == INVALID_SIZE) {
-            throw new IllegalArgumentException("itemWidth must be specified");
+            throw new IllegalArgumentException("itemHeight must be specified");
         }
         mMaxVisibleCnt = a.getInt(R.styleable.StackCardsView_maxVisibleCnt, MAX_VISIBLE_CNT);
         mScaleFactor = a.getFloat(R.styleable.StackCardsView_scaleFactor, SCALE_FACTOR);
