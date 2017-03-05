@@ -700,6 +700,7 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
                 mLastX = x;
                 mLastY = y;
                 if ((Math.abs(dx) > mDragSlop || (Math.abs(dy) > mDragSlop)) && canDrag(dx, dy)) {
+                    cancelSpringIfNeeded();
                     mIsBeingDragged = true;
                 }
                 break;
