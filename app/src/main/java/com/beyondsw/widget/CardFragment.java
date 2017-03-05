@@ -108,13 +108,26 @@ public class CardFragment extends Fragment implements Handler.Callback,StackCard
             case MSG_DATA_LOAD_DONE:{
                 List<BaseCardItem> data = (List<BaseCardItem>) msg.obj;
                 mAdapter.appendItems(data);
-                int size = data == null ? 0 : data.size();
-                mStartIndex += (mStartIndex == 0 ? size - 2 : size);
+                mStartIndex += sizeOfImage(data);
                 break;
             }
         }
         return true;
     }
+
+    private int sizeOfImage(List<BaseCardItem> items){
+        if(items==null){
+            return 0;
+        }
+        int size = 0;
+        for (BaseCardItem item : items) {
+            if (item instanceof ImageCardItem) {
+                size++;
+            }
+        }
+        return size;
+    }
+
 
     private List<BaseCardItem> loadData(int startIndex) {
         if (startIndex < ImageUrls.images.length) {
