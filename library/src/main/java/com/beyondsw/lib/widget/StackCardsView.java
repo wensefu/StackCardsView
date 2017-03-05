@@ -310,8 +310,20 @@ public class StackCardsView extends FrameLayout {
         }
     }
 
-    void updateChildrenPosition(float progress, int startIndex) {
+    void onChildScrolling(float progress, View view) {
+        int index = indexOfChild(view);
+        if (index == getChildCount() - 1) {
+            return;
+        }
+        updateChildrenPosition(progress, getChildAt(index + 1));
+    }
+
+    void updateChildrenPosition(float progress, View startView) {
         final int cnt = getChildCount();
+        int startIndex = indexOfChild(startView);
+        if (startIndex == -1) {
+            return;
+        }
         float oriScale;
         float oriAlpha;
         float oriTranslationY;
@@ -321,10 +333,6 @@ public class StackCardsView extends FrameLayout {
         float progressScale;
         for (int i = startIndex; i < cnt; i++) {
             View child = getChildAt(i);
-            if (child == null) {
-                log(TAG, "updateChildrenPosition: err,child=null");
-                return;
-            }
             int oriIndex = Math.min(mScaleArray.length - 1, i - startIndex + 1);
             if (child.getVisibility() != View.GONE) {
                 if (mScaleArray != null) {
