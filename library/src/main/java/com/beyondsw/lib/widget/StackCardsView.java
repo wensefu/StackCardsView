@@ -161,6 +161,8 @@ public class StackCardsView extends FrameLayout {
     public interface OnCardSwipedListener {
 
         void onCardDismiss(int direction);
+
+        void onCardScrolled(View view, float progress, int direction);
     }
 
     public void addOnCardSwipedListener(OnCardSwipedListener listener) {
@@ -310,20 +312,23 @@ public class StackCardsView extends FrameLayout {
         }
     }
 
-    void onChildScrolling(float progress, View view) {
-        int index = indexOfChild(view);
-        if (index == getChildCount() - 1) {
-            return;
+
+    private void notifyScrolled(float progress, View scrollingView, int direction) {
+        if (mCardSwipedListeners != null) {
+            for (OnCardSwipedListener listener : mCardSwipedListeners) {
+                listener.onCardScrolled(scrollingView, progress, direction);
+            }
         }
-        updateChildrenPosition(progress, getChildAt(index + 1));
     }
 
-    void updateChildrenPosition(float progress, View startView) {
+    void onChildScrolled(float progress, View scrollingView, int direction) {
         final int cnt = getChildCount();
-        int startIndex = indexOfChild(startView);
-        if (startIndex == -1) {
+        int startIndex = indexOfChild(scrollingView)+1;
+        if (startIndex >= cnt) {
+            notifyScrolled(progress, scrollingView, direction);
             return;
         }
+        notifyScrolled(progress, scrollingView, direction);
         float oriScale;
         float oriAlpha;
         float oriTranslationY;

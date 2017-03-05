@@ -6,6 +6,7 @@ import android.os.HandlerThread;
 import android.os.Message;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -94,6 +95,11 @@ public class CardFragment extends Fragment implements Handler.Callback,StackCard
                 mWorkHandler.obtainMessage(MSG_START_LOAD_DATA).sendToTarget();
             }
         }
+    }
+
+    @Override
+    public void onCardScrolled(View view, float progress, int direction) {
+        Log.d(TAG, "onCardScrolled: progress=" + progress + ",direction=" + direction);
     }
 
     @SuppressWarnings("unchecked")
