@@ -6,7 +6,6 @@ import android.os.HandlerThread;
 import android.os.Message;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -89,7 +88,6 @@ public class CardFragment extends Fragment implements Handler.Callback,StackCard
 
     @Override
     public void onCardDismiss(int direction) {
-        Log.d(TAG, "onCardDismiss");
         mAdapter.remove(0);
         if (mAdapter.getCount() < 3) {
             if (!mWorkHandler.hasMessages(MSG_START_LOAD_DATA)) {
@@ -103,17 +101,15 @@ public class CardFragment extends Fragment implements Handler.Callback,StackCard
     public boolean handleMessage(Message msg) {
         switch (msg.what){
             case MSG_START_LOAD_DATA:{
-                Log.d(TAG, "MSG_START_LOAD_DATA");
                 List<BaseCardItem> data = loadData(mStartIndex);
                 mMainHandler.obtainMessage(MSG_DATA_LOAD_DONE,data).sendToTarget();
                 break;
             }
             case MSG_DATA_LOAD_DONE:{
-                Log.d(TAG, "MSG_DATA_LOAD_DONE");
                 List<BaseCardItem> data = (List<BaseCardItem>) msg.obj;
                 mAdapter.appendItems(data);
                 int size = data == null ? 0 : data.size();
-                mStartIndex += size;
+                mStartIndex += (mStartIndex == 0 ? size - 2 : size);
                 break;
             }
         }
@@ -133,6 +129,8 @@ public class CardFragment extends Fragment implements Handler.Callback,StackCard
             if (startIndex == 0) {
                 ScrollCardItem item = new ScrollCardItem(getActivity(), ScrollCardItem.VERTICAL);
                 result.add(1, item);
+                ScrollCardItem item2 = new ScrollCardItem(getActivity(), ScrollCardItem.HORIZONTAL);
+                result.add(1, item2);
             }
             return result;
         }

@@ -3,6 +3,7 @@ package com.beyondsw.widget;
 import android.content.Context;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
@@ -55,8 +56,11 @@ public class ScrollCardItem extends BaseCardItem {
 
     private static class HorizontalVH extends RecyclerView.ViewHolder {
 
+        View colorView;
+
         public HorizontalVH(View itemView) {
             super(itemView);
+            colorView = Utils.findViewById(itemView,R.id.color_view);
         }
     }
 
@@ -98,7 +102,7 @@ public class ScrollCardItem extends BaseCardItem {
 
         @Override
         public VerticalVH onCreateViewHolder(ViewGroup parent, int viewType) {
-            View itemView = View.inflate(parent.getContext(), R.layout.item_recyclerview_v, null);
+            View itemView = LayoutInflater.from(mContext).inflate(R.layout.item_recyclerview_v, parent, false);
             return new VerticalVH(itemView);
         }
 
@@ -116,6 +120,20 @@ public class ScrollCardItem extends BaseCardItem {
 
     private class HorizontalAdapter extends RecyclerView.Adapter<HorizontalVH> {
 
+        int [] colors = {
+                0xfff44336,
+                0xff4527a0,
+                0xff4caf50,
+                0xffffa000,
+                0xff546e7a,
+                0xff76ff03,
+                0xff4fc3f7,
+                0xffffb74d,
+                0xffe57373,
+                0xff00897b,
+                0xff4e342e,
+        };
+
         @Override
         public HorizontalVH onCreateViewHolder(ViewGroup parent, int viewType) {
             View itemView = View.inflate(parent.getContext(), R.layout.item_recyclerview_h, null);
@@ -124,12 +142,12 @@ public class ScrollCardItem extends BaseCardItem {
 
         @Override
         public void onBindViewHolder(HorizontalVH holder, int position) {
-
+            holder.colorView.setBackgroundColor(colors[position]);
         }
 
         @Override
         public int getItemCount() {
-            return 0;
+            return colors.length;
         }
     }
 }
