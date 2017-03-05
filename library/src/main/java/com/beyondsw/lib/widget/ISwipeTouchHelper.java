@@ -23,5 +23,5 @@ public interface ISwipeTouchHelper {
      */
     boolean isCoverIdle();
 
-    int getAdjustStartIndex();
+    void removeCover(int direction);
 }

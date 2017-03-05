@@ -121,8 +121,8 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
     }
 
     @Override
-    public int getAdjustStartIndex() {
-        return mSwipeView.indexOfChild(mTouchChild) + 1;
+    public void removeCover(int direction) {
+        doManualDisappear(direction);
     }
 
     private void updateTouchChild() {
@@ -279,6 +279,71 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
             mSpring.addListener(mSpringListener);
             mSpring.setEndValue(1);
             mSwipeView.onCoverStatusChanged(false);
+        }
+    }
+
+    private void doManualDisappear(final int direction) {
+        if (mTouchChild == null) {
+            return;
+        }
+        mDisappearingCnt++;
+        final View disappearView = mTouchChild;
+        mSwipeView.tryAppendChild();
+        updateTouchChild();
+        Rect rect = new Rect();
+        disappearView.getHitRect(rect);
+        String property = null;
+        float target = 0;
+        long duration = 0;
+        float delta;
+        if (direction == StackCardsView.SWIPE_RIGHT || direction == StackCardsView.SWIPE_LEFT) {
+            final int pWidth = mSwipeView.getWidth();
+            final float curX = disappearView.getX();
+            property = "x";
+            if (direction == StackCardsView.SWIPE_RIGHT) {
+                delta = Math.max(pWidth - rect.left, 0);
+            } else {
+                delta = -Math.max(rect.right, 0);
+            }
+            target = curX + delta;
+            duration = computeSettleDuration((int) delta, 0, 0, 0);
+        } else if (direction == StackCardsView.SWIPE_DOWN || direction == StackCardsView.SWIPE_UP) {
+            final int pHeight = mSwipeView.getHeight();
+            final float curY = disappearView.getY();
+            property = "y";
+            if (direction == StackCardsView.SWIPE_DOWN) {
+                delta = Math.max(pHeight - rect.top, 0);
+            } else {
+                delta = -Math.max(rect.bottom, 0);
+            }
+            target = curY + delta;
+            duration = computeSettleDuration(0, (int) delta, 0, 0);
+        }
+        if(property!=null){
+            ObjectAnimator animator = ObjectAnimator.ofFloat(disappearView, property, target).setDuration(duration);
+            animator.setInterpolator(sInterpolator);
+            animator.addListener(new AnimatorListenerAdapter() {
+
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    mDisappearingCnt--;
+                    mSwipeView.onCardDismissed(direction);
+                    mSwipeView.onCoverStatusChanged(isCoverIdle());
+                }
+
+                @Override
+                public void onAnimationStart(Animator animation) {
+                    super.onAnimationStart(animation);
+                    mSwipeView.onCoverStatusChanged(false);
+                }
+            });
+            animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+                @Override
+                public void onAnimationUpdate(ValueAnimator animation) {
+                    onCoverScrolled(disappearView);
+                }
+            });
+            animator.start();
         }
     }
 
@@ -506,7 +571,7 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
         float dy = movingView.getY() - mChildInitY;
         double distance = Math.sqrt(dx * dx + dy * dy);
         float dismiss_distance = mSwipeView.getDismissDistance();
-        int index = mSwipeView.indexOfChild(mTouchChild) + 1;
+        int index = mSwipeView.indexOfChild(movingView) + 1;
         if (distance >= dismiss_distance) {
             mSwipeView.updateChildrenPosition(1, index);
             mCurProgress = 1;
@@ -537,7 +602,7 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
         mActivePointerId = INVALID_POINTER;
     }
 
-    private void onTouchRelease(){
+    private void onTouchRelease() {
         final StackCardsView.LayoutParams lp = (StackCardsView.LayoutParams) mTouchChild.getLayoutParams();
         if (lp.fastDismissAllowed) {
             final VelocityTracker velocityTracker2 = mVelocityTracker;
@@ -623,7 +688,7 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
                 break;
             }
         }
-        log(TAG, "onInterceptTouchEvent action=" + action+",mIsBeingDragged="+mIsBeingDragged);
+        log(TAG, "onInterceptTouchEvent action=" + action + ",mIsBeingDragged=" + mIsBeingDragged);
         return mIsBeingDragged;
     }
 
@@ -635,14 +700,14 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
         }
         mVelocityTracker.addMovement(ev);
         switch (action) {
-            case MotionEvent.ACTION_DOWN:{
+            case MotionEvent.ACTION_DOWN: {
                 log(TAG, "onTouchEvent ACTION_DOWN");
                 if (!mOnTouchableChild) {
                     return false;
                 }
                 break;
             }
-            case MotionEvent.ACTION_MOVE:{
+            case MotionEvent.ACTION_MOVE: {
                 //子view未消费down事件时，mIsBeingDragged为false
                 log(TAG, "onTouchEvent ACTION_MOVE,mActivePointerId=" + mActivePointerId);
                 if (mActivePointerId == INVALID_POINTER) {
@@ -672,7 +737,7 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
                 log(TAG, "onTouchEvent ACTION_POINTER_DOWN");
                 break;
             case MotionEvent.ACTION_CANCEL:
-            case MotionEvent.ACTION_UP:{
+            case MotionEvent.ACTION_UP: {
                 log(TAG, "onTouchEvent ACTION_UP,mActivePointerId=" + mActivePointerId);
                 if (mActivePointerId == INVALID_POINTER) {
                     break;
@@ -680,7 +745,7 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
                 onTouchRelease();
                 break;
             }
-            case MotionEvent.ACTION_POINTER_UP:{
+            case MotionEvent.ACTION_POINTER_UP: {
                 log(TAG, "onTouchEvent ACTION_POINTER_UP,mActivePointerId=" + mActivePointerId);
                 int activePointerIndex = ev.findPointerIndex(mActivePointerId);
                 if (activePointerIndex == ev.getActionIndex()) {

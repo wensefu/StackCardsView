@@ -416,6 +416,12 @@ public class StackCardsView extends FrameLayout {
         initChildren();
     }
 
+    public void removeCover(int direction) {
+        if (mTouchHelper != null) {
+            mTouchHelper.removeCover(direction);
+        }
+    }
+
     private class InnerDataObserver extends CardDataObserver {
 
         @Override

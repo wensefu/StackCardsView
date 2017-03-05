@@ -1,19 +1,80 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:orientation="vertical" android:layout_width="wrap_content"
-
-    android:layout_height="wrap_content"
-    android:gravity="center"
-    android:background="#eeeeee"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+             xmlns:app="http://schemas.android.com/apk/res-auto"
+             android:layout_width="wrap_content"
+             android:layout_height="wrap_content"
+             android:background="#eeeeee"
+             android:gravity="center"
+             android:orientation="vertical"
     >
 
-   <com.beyondsw.lib.widget.StackCardsView
-       android:id="@+id/cards"
-       android:layout_width="match_parent"
-       android:layout_height="match_parent"
-       app:itemWidth="300dp"
-       app:itemHeight="320dp"
-       />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:paddingLeft="16dp"
+        android:paddingRight="16dp"
+        android:layout_gravity="bottom"
+        android:layout_marginBottom="36dp"
+        >
+        <ImageButton
+            android:id="@+id/left"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:scaleType="centerInside"
+            android:src="@drawable/ic_left"
+            android:background="@drawable/bg_bottom_btn_selector"
+            />
+        <Space
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            />
+        <ImageButton
+            android:id="@+id/right"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:scaleType="centerInside"
+            android:src="@drawable/ic_right"
+            android:background="@drawable/bg_bottom_btn_selector"
+            />
+        <Space
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            />
+        <ImageButton
+            android:id="@+id/up"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:scaleType="centerInside"
+            android:src="@drawable/ic_up"
+            android:background="@drawable/bg_bottom_btn_selector"
+            />
+        <Space
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            />
+        <ImageButton
+            android:id="@+id/down"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:scaleType="centerInside"
+            android:src="@drawable/ic_down"
+            android:background="@drawable/bg_bottom_btn_selector"
+            />
+    </LinearLayout>
 
-</LinearLayout>
+    <com.beyondsw.lib.widget.StackCardsView
+        android:id="@+id/cards"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:itemHeight="320dp"
+        app:itemWidth="300dp"
+        android:paddingBottom="66dp"
+        android:clipToPadding="false"
+        />
+
+</FrameLayout>

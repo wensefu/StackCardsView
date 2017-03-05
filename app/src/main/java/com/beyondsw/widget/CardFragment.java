@@ -19,7 +19,7 @@ import java.util.List;
 /**
  * Created by wensefu on 17-3-4.
  */
-public class CardFragment extends Fragment implements Handler.Callback,StackCardsView.OnCardSwipedListener{
+public class CardFragment extends Fragment implements Handler.Callback,StackCardsView.OnCardSwipedListener,View.OnClickListener{
 
     private static final String TAG ="Demo-CardFragment";
 
@@ -33,10 +33,25 @@ public class CardFragment extends Fragment implements Handler.Callback,StackCard
     private volatile int mStartIndex;
     private static final int PAGE_COUNT = 10;
 
+    private View mLeftBtn;
+    private View mRightBtn;
+    private View mUpBtn;
+    private View mDownBtn;
+
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View root = inflater.inflate(R.layout.page1,null);
+
+        mLeftBtn = Utils.findViewById(root,R.id.left);
+        mRightBtn = Utils.findViewById(root,R.id.right);
+        mUpBtn = Utils.findViewById(root,R.id.up);
+        mDownBtn = Utils.findViewById(root, R.id.down);
+        mLeftBtn.setOnClickListener(this);
+        mRightBtn.setOnClickListener(this);
+        mUpBtn.setOnClickListener(this);
+        mDownBtn.setOnClickListener(this);
+
         mCardsView = Utils.findViewById(root,R.id.cards);
         mCardsView.addOnCardSwipedListener(this);
         mAdapter = new CardAdapter();
@@ -57,6 +72,19 @@ public class CardFragment extends Fragment implements Handler.Callback,StackCard
         mWorkHandler.removeMessages(MSG_START_LOAD_DATA);
         mMainHandler.removeMessages(MSG_DATA_LOAD_DONE);
         mStartIndex = 0;
+    }
+
+    @Override
+    public void onClick(View v) {
+        if (v == mLeftBtn) {
+            mCardsView.removeCover(StackCardsView.SWIPE_LEFT);
+        } else if (v == mRightBtn) {
+            mCardsView.removeCover(StackCardsView.SWIPE_RIGHT);
+        } else if (v == mUpBtn) {
+            mCardsView.removeCover(StackCardsView.SWIPE_UP);
+        } else if (v == mDownBtn) {
+            mCardsView.removeCover(StackCardsView.SWIPE_DOWN);
+        }
     }
 
     @Override
