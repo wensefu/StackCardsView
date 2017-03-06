@@ -312,8 +312,7 @@ public class StackCardsView extends FrameLayout {
         }
     }
 
-
-    private void notifyScrolled(float progress, View scrollingView, int direction) {
+    void onCoverScrolled(View scrollingView, float progress, int direction) {
         if (mCardSwipedListeners != null) {
             for (OnCardSwipedListener listener : mCardSwipedListeners) {
                 listener.onCardScrolled(scrollingView, progress, direction);
@@ -321,14 +320,12 @@ public class StackCardsView extends FrameLayout {
         }
     }
 
-    void onChildScrolled(float progress, View scrollingView, int direction) {
+    void updateChildrenProgress(float progress, View scrollingView) {
         final int cnt = getChildCount();
-        int startIndex = indexOfChild(scrollingView)+1;
+        int startIndex = indexOfChild(scrollingView) + 1;
         if (startIndex >= cnt) {
-            notifyScrolled(progress, scrollingView, direction);
             return;
         }
-        notifyScrolled(progress, scrollingView, direction);
         float oriScale;
         float oriAlpha;
         float oriTranslationY;
@@ -399,7 +396,7 @@ public class StackCardsView extends FrameLayout {
         }
     }
 
-    private  LayoutParams buildLayoutParams(Adapter adapter, int position) {
+    private LayoutParams buildLayoutParams(Adapter adapter, int position) {
         return new LayoutParams(mItemWidth, mItemHeight, Gravity.CENTER)
                 .swipeDirection(adapter.getSwipeDirection(position))
                 .dismissDirection(adapter.getDismissDirection(position))

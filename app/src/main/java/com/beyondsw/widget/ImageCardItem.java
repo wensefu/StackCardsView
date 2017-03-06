@@ -28,11 +28,28 @@ public class ImageCardItem extends BaseCardItem {
         this.label = label;
     }
 
+    public  static class ViewHolder{
+        ImageView left;
+        ImageView right;
+        ImageView up;
+        ImageView down;
+    }
+
     @Override
     public View getView(View convertView, ViewGroup parent) {
         convertView = View.inflate(mContext,R.layout.item_imagecard,null);
         ImageView imageView = Utils.findViewById(convertView,R.id.image);
         TextView labelview = Utils.findViewById(convertView,R.id.label);
+        ImageView left = Utils.findViewById(convertView,R.id.left);
+        ImageView right = Utils.findViewById(convertView,R.id.right);
+        ImageView up = Utils.findViewById(convertView,R.id.up);
+        ImageView down = Utils.findViewById(convertView,R.id.down);
+        ViewHolder vh = new ViewHolder();
+        vh.left = left;
+        vh.right = right;
+        vh.up = up;
+        vh.down = down;
+        convertView.setTag(vh);
         Glide.with(mContext)
                 .load(url)
                 .placeholder(R.drawable.img_dft)

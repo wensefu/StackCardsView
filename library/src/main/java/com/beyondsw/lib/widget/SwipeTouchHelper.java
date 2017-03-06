@@ -331,7 +331,7 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
             target = curY + delta;
             duration = computeSettleDuration(0, (int) delta, 0, 0);
         }
-        if(property!=null){
+        if (property != null) {
             ObjectAnimator animator = ObjectAnimator.ofFloat(disappearView, property, target).setDuration(duration);
             animator.setInterpolator(sInterpolator);
             animator.addListener(new AnimatorListenerAdapter() {
@@ -349,33 +349,33 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
                     mSwipeView.onCoverStatusChanged(false);
                 }
             });
-            mManualUpdateListener = new ManualDisappearUpdateListener(disappearView,direction);
+            mManualUpdateListener = new ManualDisappearUpdateListener(disappearView);
             animator.addUpdateListener(mManualUpdateListener);
             animator.start();
         }
     }
 
-    private class ManualDisappearUpdateListener implements ValueAnimator.AnimatorUpdateListener{
+    private class ManualDisappearUpdateListener implements ValueAnimator.AnimatorUpdateListener {
 
         View disappearView;
         boolean isCanceled;
-        int direction;
 
-        ManualDisappearUpdateListener(View disappearView,int direction) {
+        ManualDisappearUpdateListener(View disappearView) {
             this.disappearView = disappearView;
-            this.direction = direction;
         }
 
         @Override
         public void onAnimationUpdate(ValueAnimator animation) {
+            ScrollInfo info = calcScrollInfo(disappearView);
             if (!isCanceled) {
-                onCoverScrolled(disappearView);
+                mSwipeView.updateChildrenProgress(info.progress, disappearView);
             }
+            mSwipeView.onCoverScrolled(disappearView, info.progress, info.direction);
         }
 
-        void end(){
+        void end() {
             isCanceled = true;
-            mSwipeView.onChildScrolled(1, disappearView,direction);
+            mSwipeView.updateChildrenProgress(1, disappearView);
         }
     }
 
@@ -485,7 +485,7 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
         mSmoothUpdater.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
             @Override
             public void onAnimationUpdate(ValueAnimator animation) {
-                mSwipeView.onChildScrolled((float) animation.getAnimatedValue(), scrollingView, StackCardsView.SWIPE_NONE);
+                mSwipeView.updateChildrenProgress((float) animation.getAnimatedValue(), scrollingView);
             }
         });
         mSmoothUpdater.start();
@@ -602,25 +602,43 @@ public class SwipeTouchHelper implements ISwipeTouchHelper {
         return (float) Math.sin(f);
     }
 
-    private void onCoverScrolled(View movingView) {
+    private class ScrollInfo {
+        float progress;
+        int direction;
+    }
+
+    private ScrollInfo calcScrollInfo(View movingView) {
+        ScrollInfo result = new ScrollInfo();
         float dx = movingView.getX() - mChildInitX;
         float dy = movingView.getY() - mChildInitY;
         int direction;
-        if (Math.abs(dx) * SLOPE > Math.abs(dy)) {
-            direction = dx > 0 ? StackCardsView.SWIPE_RIGHT : StackCardsView.SWIPE_LEFT;
+        if (Float.compare(dx, 0) == 0 && Float.compare(dy, 0) == 0) {
+            direction = StackCardsView.SWIPE_NONE;
         } else {
-            direction = dy > 0 ? StackCardsView.SWIPE_DOWN : StackCardsView.SWIPE_UP;
+            if (Math.abs(dx) * SLOPE > Math.abs(dy)) {
+                direction = dx > 0 ? StackCardsView.SWIPE_RIGHT : StackCardsView.SWIPE_LEFT;
+            } else {
+                direction = dy > 0 ? StackCardsView.SWIPE_DOWN : StackCardsView.SWIPE_UP;
+            }
         }
+        log(TAG, "calcScrollInfo,direction=" + direction + ",dx=" + dx + ",dy=" + dy);
+        result.direction = direction;
         double distance = Math.sqrt(dx * dx + dy * dy);
         float dismiss_distance = mSwipeView.getDismissDistance();
         if (distance >= dismiss_distance) {
-            mSwipeView.onChildScrolled(1, movingView,direction);
-            mCurProgress = 1;
+            result.progress = 1;
         } else {
-            final float progress = (float) distance / dismiss_distance;
-            mSwipeView.onChildScrolled(progress, movingView,direction);
-            mCurProgress = progress;
+            result.progress = (float) distance / dismiss_distance;
         }
+        return result;
+    }
+
+    private void onCoverScrolled(View movingView) {
+        ScrollInfo info = calcScrollInfo(movingView);
+        final float progress = info.progress;
+        mCurProgress = progress;
+        mSwipeView.onCoverScrolled(movingView, progress, info.direction);
+        mSwipeView.updateChildrenProgress(progress, movingView);
     }
 
     private void cancelSpringIfNeeded() {

@@ -21,7 +21,7 @@ import java.util.List;
  */
 public class CardFragment extends Fragment implements Handler.Callback,StackCardsView.OnCardSwipedListener,View.OnClickListener{
 
-    private static final String TAG ="Demo-CardFragment";
+    private static final String TAG ="StackCardsView-DEMO";
 
     private StackCardsView mCardsView;
     private CardAdapter mAdapter;
@@ -99,7 +99,44 @@ public class CardFragment extends Fragment implements Handler.Callback,StackCard
 
     @Override
     public void onCardScrolled(View view, float progress, int direction) {
-        Log.d(TAG, "onCardScrolled: progress=" + progress + ",direction=" + direction);
+        Log.d(TAG, "onCardScrolled: view=" + view.hashCode() + ", progress=" + progress + ",direction=" + direction);
+        Object tag = view.getTag();
+        if (tag instanceof ImageCardItem.ViewHolder) {
+            ImageCardItem.ViewHolder vh = (ImageCardItem.ViewHolder)tag;
+            if (progress > 0) {
+                switch (direction){
+                    case StackCardsView.SWIPE_LEFT:
+                        vh.left.setAlpha(progress);
+                        vh.right.setAlpha(0f);
+                        vh.up.setAlpha(0f);
+                        vh.down.setAlpha(0f);
+                        break;
+                    case StackCardsView.SWIPE_RIGHT:
+                        vh.right.setAlpha(progress);
+                        vh.left.setAlpha(0f);
+                        vh.up.setAlpha(0f);
+                        vh.down.setAlpha(0f);
+                        break;
+                    case StackCardsView.SWIPE_UP:
+                        vh.up.setAlpha(progress);
+                        vh.left.setAlpha(0f);
+                        vh.right.setAlpha(0f);
+                        vh.down.setAlpha(0f);
+                        break;
+                    case StackCardsView.SWIPE_DOWN:
+                        vh.down.setAlpha(progress);
+                        vh.left.setAlpha(0f);
+                        vh.right.setAlpha(0f);
+                        vh.up.setAlpha(0f);
+                        break;
+                }
+            } else {
+                vh.left.setAlpha(0f);
+                vh.right.setAlpha(0f);
+                vh.up.setAlpha(0f);
+                vh.down.setAlpha(0f);
+            }
+        }
     }
 
     @SuppressWarnings("unchecked")
