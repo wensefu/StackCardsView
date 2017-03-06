@@ -11,7 +11,7 @@
        android:layout_height="wrap_content"
        android:textSize="30sp"
        android:textColor="@android:color/white"
-       android:text="Page Two"
+       android:text="StackCardsView"
        />
 
 </LinearLayout>
