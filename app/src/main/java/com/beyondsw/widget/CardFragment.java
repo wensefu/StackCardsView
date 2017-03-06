@@ -10,6 +10,8 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 
 import com.beyondsw.lib.widget.StackCardsView;
 
@@ -19,7 +21,8 @@ import java.util.List;
 /**
  * Created by wensefu on 17-3-4.
  */
-public class CardFragment extends Fragment implements Handler.Callback,StackCardsView.OnCardSwipedListener,View.OnClickListener{
+public class CardFragment extends Fragment implements Handler.Callback,StackCardsView.OnCardSwipedListener
+        ,View.OnClickListener,CompoundButton.OnCheckedChangeListener{
 
     private static final String TAG ="StackCardsView-DEMO";
 
@@ -37,12 +40,24 @@ public class CardFragment extends Fragment implements Handler.Callback,StackCard
     private View mRightBtn;
     private View mUpBtn;
     private View mDownBtn;
+    private CheckBox mCb;
+
+    private Callback mCallback;
+
+    public interface Callback {
+        void onViewPagerCbChanged(boolean checked);
+    }
 
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View root = inflater.inflate(R.layout.page1,null);
 
+        mCb = Utils.findViewById(root, R.id.view_pager_cb);
+        mCb.setOnCheckedChangeListener(this);
+        if (mCallback != null) {
+            mCallback.onViewPagerCbChanged(mCb.isChecked());
+        }
         mLeftBtn = Utils.findViewById(root,R.id.left);
         mRightBtn = Utils.findViewById(root,R.id.right);
         mUpBtn = Utils.findViewById(root,R.id.up);
@@ -64,6 +79,13 @@ public class CardFragment extends Fragment implements Handler.Callback,StackCard
         return root;
     }
 
+    void setCallback(Callback callback) {
+        mCallback = callback;
+        if (mCb != null) {
+            mCallback.onViewPagerCbChanged(mCb.isChecked());
+        }
+    }
+
     @Override
     public void onDestroyView() {
         super.onDestroyView();
@@ -72,6 +94,13 @@ public class CardFragment extends Fragment implements Handler.Callback,StackCard
         mWorkHandler.removeMessages(MSG_START_LOAD_DATA);
         mMainHandler.removeMessages(MSG_DATA_LOAD_DONE);
         mStartIndex = 0;
+    }
+
+    @Override
+    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+        if (mCallback != null) {
+            mCallback.onViewPagerCbChanged(isChecked);
+        }
     }
 
     @Override
@@ -183,10 +212,8 @@ public class CardFragment extends Fragment implements Handler.Callback,StackCard
                 result.add(item);
             }
             if (startIndex == 0) {
-                ScrollCardItem item = new ScrollCardItem(getActivity(), ScrollCardItem.VERTICAL);
-                result.add(1, item);
-                ScrollCardItem item2 = new ScrollCardItem(getActivity(), ScrollCardItem.HORIZONTAL);
-                result.add(1, item2);
+                ScrollCardItem item = new ScrollCardItem(getActivity());
+                result.add(result.size() / 2, item);
             }
             return result;
         }

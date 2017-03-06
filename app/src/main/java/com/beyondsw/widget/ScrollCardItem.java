@@ -15,32 +15,18 @@ import com.beyondsw.lib.widget.StackCardsView;
  */
 public class ScrollCardItem extends BaseCardItem {
 
-    public static final int VERTICAL = 1;
-    public static final int HORIZONTAL = 2;
 
-    int direction = VERTICAL;
-
-    public ScrollCardItem(Context context,int direction) {
+    public ScrollCardItem(Context context) {
         super(context);
-        this.direction = direction;
-        if (direction == VERTICAL) {
-            swipeDir = StackCardsView.SWIPE_LEFT | StackCardsView.SWIPE_RIGHT;
-        } else {
-            swipeDir = StackCardsView.SWIPE_UP | StackCardsView.SWIPE_DOWN;
-        }
+        swipeDir = StackCardsView.SWIPE_LEFT | StackCardsView.SWIPE_RIGHT;
     }
 
     @Override
     public View getView(View convertView, ViewGroup parent) {
         convertView = View.inflate(mContext, R.layout.item_scrollcard, null);
         RecyclerView recyclerView = Utils.findViewById(convertView, R.id.recyclerView);
-        if (direction == VERTICAL) {
-            recyclerView.setLayoutManager(new LinearLayoutManager(mContext, LinearLayoutManager.VERTICAL, false));
-            recyclerView.setAdapter(new VerticalAdapter());
-        } else {
-            recyclerView.setLayoutManager(new LinearLayoutManager(mContext, LinearLayoutManager.HORIZONTAL, false));
-            recyclerView.setAdapter(new HorizontalAdapter());
-        }
+        recyclerView.setLayoutManager(new LinearLayoutManager(mContext, LinearLayoutManager.VERTICAL, false));
+        recyclerView.setAdapter(new VerticalAdapter());
         return convertView;
     }
 
@@ -51,16 +37,6 @@ public class ScrollCardItem extends BaseCardItem {
         public VerticalVH(View itemView) {
             super(itemView);
             textView = Utils.findViewById(itemView,R.id.text_v);
-        }
-    }
-
-    private static class HorizontalVH extends RecyclerView.ViewHolder {
-
-        View colorView;
-
-        public HorizontalVH(View itemView) {
-            super(itemView);
-            colorView = Utils.findViewById(itemView,R.id.color_view);
         }
     }
 
@@ -114,40 +90,6 @@ public class ScrollCardItem extends BaseCardItem {
         @Override
         public int getItemCount() {
             return array.length;
-        }
-    }
-
-
-    private class HorizontalAdapter extends RecyclerView.Adapter<HorizontalVH> {
-
-        int [] colors = {
-                0xfff44336,
-                0xff4527a0,
-                0xff4caf50,
-                0xffffa000,
-                0xff546e7a,
-                0xff76ff03,
-                0xff4fc3f7,
-                0xffffb74d,
-                0xffe57373,
-                0xff00897b,
-                0xff4e342e,
-        };
-
-        @Override
-        public HorizontalVH onCreateViewHolder(ViewGroup parent, int viewType) {
-            View itemView = View.inflate(parent.getContext(), R.layout.item_recyclerview_h, null);
-            return new HorizontalVH(itemView);
-        }
-
-        @Override
-        public void onBindViewHolder(HorizontalVH holder, int position) {
-            holder.colorView.setBackgroundColor(colors[position]);
-        }
-
-        @Override
-        public int getItemCount() {
-            return colors.length;
         }
     }
 }
