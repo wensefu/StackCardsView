@@ -49,9 +49,7 @@
 | dragSensitivity      |    滑动灵敏度 | float  |否|
 
 <br/><br/>
- - xml引入StackCardsView:
- 
- 
+
 
 ``` java
 设置adapter:
