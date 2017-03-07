@@ -85,8 +85,8 @@
         android:id="@+id/cards"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:itemHeight="320dp"
-        app:itemWidth="300dp"
+        app:itemHeight="340dp"
+        app:itemWidth="340dp"
         android:paddingBottom="66dp"
         android:clipToPadding="false"
         />
