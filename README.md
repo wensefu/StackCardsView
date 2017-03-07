@@ -1,4 +1,4 @@
-﻿# StackCardsView
+# StackCardsView
 
 堆叠滑动控件，类似于社交软件探探的效果，并增加以下扩展：
 
