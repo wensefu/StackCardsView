@@ -4,7 +4,7 @@
 
 - **支持滑动方向控制**
 - **支持消失方向控制**
-- **兼容嵌入ViewPager等滑动控件**
+- **支持嵌入到ViewPager等滑动控件**
 - **支持内嵌ListView,RecycleView等滑动控件**
 
 
