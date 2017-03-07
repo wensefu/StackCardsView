@@ -36,6 +36,7 @@
         />
 ```
 支持的xml属性设置：
+
 | 属性名 |    说明 | 类型  |是否必须|
 | :-------- | :------| :-- |:--: |
 | itemWidth  | 卡片宽度 |  dimension   |是|
@@ -46,6 +47,7 @@
 | alphaFactor      |    每层相对于上层的alpha系数 | float  |否|
 | dismissFactor      |    滑动距离超过控件宽度的多少比例时消失 | float  |否|
 | dragSensitivity      |    滑动灵敏度 | float  |否|
+
 <br/><br/>
  - xml引入StackCardsView:
  
