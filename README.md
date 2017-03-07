@@ -1,28 +1,28 @@
-# StackCardsView
+ï»¿# StackCardsView
 
-¶Ñµş»¬¶¯¿Ø¼ş£¬ÀàËÆÓÚÉç½»Èí¼şÌ½Ì½µÄĞ§¹û£¬²¢Ôö¼ÓÒÔÏÂÀ©Õ¹£º
+å †å æ»‘åŠ¨æ§ä»¶ï¼Œç±»ä¼¼äºç¤¾äº¤è½¯ä»¶æ¢æ¢çš„æ•ˆæœï¼Œå¹¶å¢åŠ ä»¥ä¸‹æ‰©å±•ï¼š
 
-- **Ö§³Ö»¬¶¯·½Ïò¿ØÖÆ**
-- **Ö§³ÖÏûÊ§·½Ïò¿ØÖÆ**
-- **¼æÈİÇ¶ÈëViewPagerµÈ»¬¶¯¿Ø¼ş**
-- **Ö§³ÖÄÚÇ¶ListView,RecycleViewµÈ»¬¶¯¿Ø¼ş**
+- **æ”¯æŒæ»‘åŠ¨æ–¹å‘æ§åˆ¶**
+- **æ”¯æŒæ¶ˆå¤±æ–¹å‘æ§åˆ¶**
+- **å…¼å®¹åµŒå…¥ViewPagerç­‰æ»‘åŠ¨æ§ä»¶**
+- **æ”¯æŒå†…åµŒListView,RecycleViewç­‰æ»‘åŠ¨æ§ä»¶**
 
 
 -------------------
 
-Ğ§¹ûÑİÊ¾
+æ•ˆæœæ¼”ç¤º
 -------
 
- ![ÑİÊ¾1-¿ìËÙ»¬¶¯·É³ö](demo-images/demo1.gif)&ensp;&ensp;&ensp;&ensp;&ensp;![ÑİÊ¾2-´úÂë¿ØÖÆ·É³ö](demo-images/demo2.gif)
+ ![æ¼”ç¤º1-å¿«é€Ÿæ»‘åŠ¨é£å‡º](demo-images/demo1.gif)&ensp;&ensp;&ensp;&ensp;&ensp;![æ¼”ç¤º2-ä»£ç æ§åˆ¶é£å‡º](demo-images/demo2.gif)
 <br/><br/>
-![ÑİÊ¾3-Ç¶Èëµ½ViewPager](demo-images/demo3.gif)&ensp;&ensp;&ensp;&ensp;&ensp;![ÑİÊ¾4-ÄÚÇ¶RecycleView](demo-images/demo4.gif)
+![æ¼”ç¤º3-åµŒå…¥åˆ°ViewPager](demo-images/demo3.gif)&ensp;&ensp;&ensp;&ensp;&ensp;![æ¼”ç¤º4-å†…åµŒRecycleView](demo-images/demo4.gif)
 
 -------------------
 
-ÈçºÎÊ¹ÓÃ
+å¦‚ä½•ä½¿ç”¨
 -------
 
- - xmlÒıÈëStackCardsView:
+ - xmlå¼•å…¥StackCardsView:
 
 ``` xml
     <com.beyondsw.lib.widget.StackCardsView
@@ -35,25 +35,25 @@
         android:clipToPadding="false"
         />
 ```
-Ö§³ÖµÄxmlÊôĞÔÉèÖÃ£º
-| ÊôĞÔÃû      |    ËµÃ÷ | ÀàĞÍ  |ÊÇ·ñ±ØĞë|
+æ”¯æŒçš„xmlå±æ€§è®¾ç½®ï¼š
+| å±æ€§å      |    è¯´æ˜ | ç±»å‹  |æ˜¯å¦å¿…é¡»|
 | :-------- | :------| :-- |:--: |
-| itemWidth  | ¿¨Æ¬¿í¶È |  dimension   |ÊÇ|
-| itemHeight     |   ¿¨Æ¬¸ß¶È |  dimension  |ÊÇ|
-| maxVisibleCnt      |    ²»»¬¶¯Ê±×î¶à¿ÉÒÔ¿´µ½µÄ¿¨Æ¬Êı | integer  |·ñ|
-| edgeHeight      |    ²ãµşĞ§¹û¸ß¶È | dimension  |·ñ|
-| scaleFactor      |    Ã¿²ãÏà¶ÔÓÚÉÏ²ãµÄscaleÏµÊı | float  |·ñ|
-| alphaFactor      |    Ã¿²ãÏà¶ÔÓÚÉÏ²ãµÄalphaÏµÊı | float  |·ñ|
-| dismissFactor      |    »¬¶¯¾àÀë³¬¹ı¿Ø¼ş¿í¶ÈµÄ¶àÉÙ±ÈÀıÊ±ÏûÊ§ | float  |·ñ|
-| dismissAlpha      |   //todo,¿¨Æ¬ÏûÊ§Ê±µÄÍ¸Ã÷¶È£¬ÔİÎ´ÊµÏÖ | float  |·ñ|
-| dragSensitivity      |    »¬¶¯ÁéÃô¶È | float  |·ñ|
+| itemWidth  | å¡ç‰‡å®½åº¦ |  dimension   |æ˜¯|
+| itemHeight     |   å¡ç‰‡é«˜åº¦ |  dimension  |æ˜¯|
+| maxVisibleCnt      |    ä¸æ»‘åŠ¨æ—¶æœ€å¤šå¯ä»¥çœ‹åˆ°çš„å¡ç‰‡æ•° | integer  |å¦|
+| edgeHeight      |    å±‚å æ•ˆæœé«˜åº¦ | dimension  |å¦|
+| scaleFactor      |    æ¯å±‚ç›¸å¯¹äºä¸Šå±‚çš„scaleç³»æ•° | float  |å¦|
+| alphaFactor      |    æ¯å±‚ç›¸å¯¹äºä¸Šå±‚çš„alphaç³»æ•° | float  |å¦|
+| dismissFactor      |    æ»‘åŠ¨è·ç¦»è¶…è¿‡æ§ä»¶å®½åº¦çš„å¤šå°‘æ¯”ä¾‹æ—¶æ¶ˆå¤± | float  |å¦|
+| dismissAlpha      |   //todo,å¡ç‰‡æ¶ˆå¤±æ—¶çš„é€æ˜åº¦ï¼Œæš‚æœªå®ç° | float  |å¦|
+| dragSensitivity      |    æ»‘åŠ¨çµæ•åº¦ | float  |å¦|
 <br/><br/>
- - xmlÒıÈëStackCardsView:
+ - xmlå¼•å…¥StackCardsView:
  
  
 
 ``` java
-ÉèÖÃadapter:
+è®¾ç½®adapter:
 
   mCardsView = Utils.findViewById(root,R.id.cards);
   mCardsView.addOnCardSwipedListener(this);
@@ -94,28 +94,28 @@ public class CardAdapter extends StackCardsView.Adapter {
 
     @Override
     public int getSwipeDirection(int position) {
-        //ÕâÀï¿ØÖÆÃ¿ÕÅ¿¨µÄÖ§³Ö»¬¶¯³¬¹ıÒ»¶¨¾àÀëÏûÊ§µÄ·½Ïò
+        //è¿™é‡Œæ§åˆ¶æ¯å¼ å¡çš„æ”¯æŒæ»‘åŠ¨è¶…è¿‡ä¸€å®šè·ç¦»æ¶ˆå¤±çš„æ–¹å‘
         BaseCardItem item = mItems.get(position);
         return item.swipeDir;
     }
 
     @Override
     public int getDismissDirection(int position) {
-        //ÕâÀï¿ØÖÆÃ¿ÕÅ¿¨µÄÖ§³Ö»¬¶¯³¬¹ıÒ»¶¨¾àÀëÏûÊ§µÄ·½Ïò
+        //è¿™é‡Œæ§åˆ¶æ¯å¼ å¡çš„æ”¯æŒæ»‘åŠ¨è¶…è¿‡ä¸€å®šè·ç¦»æ¶ˆå¤±çš„æ–¹å‘
         BaseCardItem item = mItems.get(position);
         return item.dismissDir;
     }
 
     @Override
     public boolean isFastDismissAllowed(int position) {
-        //ÕâÀï¿ØÖÆÃ¿ÕÅ¿¨µÄÖ§³Ö¿ìËÙ»¬¶¯ÏûÊ§µÄ·½Ïò
+        //è¿™é‡Œæ§åˆ¶æ¯å¼ å¡çš„æ”¯æŒå¿«é€Ÿæ»‘åŠ¨æ¶ˆå¤±çš„æ–¹å‘
         BaseCardItem item = mItems.get(position);
         return item.fastDismissAllowed;
     }
 
     @Override
     public int getMaxRotation(int position) {
-         //ÕâÀï¿ØÖÆÃ¿ÕÅ¿¨µÄ×î´óĞı×ª½Ç
+         //è¿™é‡Œæ§åˆ¶æ¯å¼ å¡çš„æœ€å¤§æ—‹è½¬è§’
         BaseCardItem item = mItems.get(position);
         return item.maxRotation;
     }
@@ -123,7 +123,7 @@ public class CardAdapter extends StackCardsView.Adapter {
 ```
 
 
-[ÎÊÌâ·´À¡](https://github.com/wensefu/StackCardsView/issues "ÎÊÌâ·´À¡")
+[é—®é¢˜åé¦ˆ](https://github.com/wensefu/StackCardsView/issues "é—®é¢˜åé¦ˆ")
 
 
 License
