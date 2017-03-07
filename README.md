@@ -36,7 +36,7 @@
         />
 ```
 支持的xml属性设置：
-| 属性名      |    说明 | 类型  |是否必须|
+| 属性名 |    说明 | 类型  |是否必须|
 | :-------- | :------| :-- |:--: |
 | itemWidth  | 卡片宽度 |  dimension   |是|
 | itemHeight     |   卡片高度 |  dimension  |是|
@@ -45,7 +45,6 @@
 | scaleFactor      |    每层相对于上层的scale系数 | float  |否|
 | alphaFactor      |    每层相对于上层的alpha系数 | float  |否|
 | dismissFactor      |    滑动距离超过控件宽度的多少比例时消失 | float  |否|
-| dismissAlpha      |   //todo,卡片消失时的透明度，暂未实现 | float  |否|
 | dragSensitivity      |    滑动灵敏度 | float  |否|
 <br/><br/>
  - xml引入StackCardsView:
