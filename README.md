@@ -1,5 +1,7 @@
 # StackCardsView
 
+#### [demo apk download](https://github.com/wensefu/StackCardsView/blob/master/StackCardsView-demo.apk)
+
 堆叠滑动控件，类似于社交软件探探的效果，并增加以下扩展：
 
 - **支持滑动方向控制**
